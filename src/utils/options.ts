@@ -5,10 +5,23 @@ const schema = {
   // key: default-value
   vtubervnButtonInYoutube: true,
   visualizerMaxFps: 60,
-  enableCrowdsourcing: false,
+  enableCrowdsourcing: true,
 };
-type Schema = typeof schema;
-export const translations = {
+export type Schema = typeof schema;
+
+type TranslationSchema = {
+  title: string;
+  subtitle: string;
+  vtubervnButtonInYoutube: { name: string; description: string };
+  visualizerMaxFps: { name: string; description: string };
+  enableCrowdsourcing: { name: string; description: string };
+  ytPlayer: Record<string, string>;
+  popup: Record<string, string>;
+};
+
+export type Locale = "vi" | "en";
+
+export const translations: Record<Locale, TranslationSchema> = {
   vi: {
     title: "VtuberVN+",
     subtitle: "Tùy chỉnh tiện ích",
@@ -52,6 +65,13 @@ export const translations = {
       errorSyncingHistory: "[VtuberVN+] Lỗi khi đồng bộ lịch sử xem.",
       errorDetectingRole: "[VtuberVN+] Lỗi khi nhận diện vai trò người dùng.",
     },
+    popup: {
+      nowPlaying: "Đang xem:",
+      openOnVtuberVN: "Mở trên VtuberVN",
+      liveNow: "Live now:",
+      channels: "kênh",
+      settings: "Cài đặt",
+    }
   },
   en: {
     title: "VtuberVN+",
@@ -96,10 +116,16 @@ export const translations = {
       errorSyncingHistory: "[VtuberVN+] Error syncing watch history.",
       errorDetectingRole: "[VtuberVN+] Error detecting user role.",
     },
+    popup: {
+      nowPlaying: "Now playing:",
+      openOnVtuberVN: "Open on VtuberVN",
+      liveNow: "Live now:",
+      channels: "channels",
+      settings: "Settings",
+    }
   },
-} as const;
+};
 
-export type Locale = "vi" | "en";
 
 export const Options = {
   /** Get the options storage schema */
@@ -109,8 +135,8 @@ export const Options = {
 
   /** Get an option's description */
   name<K extends keyof Schema>(key: K, locale: Locale = "vi"): string | null {
-    // @ts-ignore
-    return translations[locale]?.[key]?.name ?? null;
+    const translation = translations[locale][key as keyof Pick<TranslationSchema, keyof Schema>];
+    return (translation as { name?: string })?.name ?? null;
   },
 
   /** Get an option's description */
@@ -118,8 +144,8 @@ export const Options = {
     key: K,
     locale: Locale = "vi",
   ): string | null {
-    // @ts-ignore
-    return translations[locale]?.[key]?.description ?? null;
+    const translation = translations[locale][key as keyof Pick<TranslationSchema, keyof Schema>];
+    return (translation as { description?: string })?.description ?? null;
   },
 
   /** Get an option */

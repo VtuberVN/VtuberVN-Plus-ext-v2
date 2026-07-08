@@ -189,8 +189,9 @@ manager.handleAsk(
     }
     try {
       // access sessionstorage
-      const visitorData = // @ts-expect-error "yt" is a YT global
-        window.yt.config_["DATASYNC_ID"] || window.yt.config_["VISITOR_DATA"];
+      const ytGlobal = (window as Window & { yt?: { config_?: Record<string, string | undefined> } }).yt;
+      const visitorData =
+        ytGlobal?.config_?.["DATASYNC_ID"] || ytGlobal?.config_?.["VISITOR_DATA"];
       const potKey = window.sessionStorage.getItem("iU5q-!O9@$");
       console.log(potKey)
       const potValue = window.sessionStorage.getItem((potKey ?? "_").split(",")[1]);
@@ -258,11 +259,12 @@ manager.handleAsk(
               let downloadedBytes = 0;
 
               const reader = rstream.getReader();
-              // eslint-disable-next-line no-constant-condition
-              while (true) {
+              let isDone = false;
+              while (!isDone) {
                 const x = await reader.read();
 
                 if (x.done) {
+                  isDone = true;
                   break;
                 }
 

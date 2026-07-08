@@ -61,6 +61,6 @@ export default defineConfig({
   ],
   publicDir: resolve(__dirname, 'public'),
   esbuild: {
-    pure: isDev ? [] : ['console.log', 'console.info', 'console.debug'],
+    pure: [],
   },
 });

@@ -4,8 +4,8 @@
   <defs>
     <!-- Hệ màu Gradient Đỏ Hồng - Cam cháy -->
     <linearGradient id="vgradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#FF2A5F" />
-      <stop offset="100%" stop-color="#FF6B2B" />
+      <stop offset="0%" stop-color="#ff2a46" />
+      <stop offset="100%" stop-color="#ffe32b" />
     </linearGradient>
   </defs>
 

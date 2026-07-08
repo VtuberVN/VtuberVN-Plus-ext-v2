@@ -10,50 +10,8 @@ import {
 console.log("[VtuberVN+] background script loaded");
 
 runtime.onInstalled.addListener(() => {
-  // Define the rule to remove the "X-Frame-Options" header
-  const rules = [
-    {
-      id: 1, // Unique rule ID
-      priority: 1,
-      action: {
-        type: "modifyHeaders",
-        responseHeaders: [
-          {
-            header: "X-Frame-Options",
-            operation: "remove",
-          },
-        ],
-      },
-      condition: {
-        initiatorDomains: [ "youtube.com" ],
-        resourceTypes: [ "sub_frame", "main_frame" ],
-      },
-    },
-    {
-      id: 2, // Unique ID for this rule
-      priority: 1, // Priority for applying the rule
-      action: {
-        type: "modifyHeaders",
-        requestHeaders: [
-          {
-            header: "Origin",
-            operation: "set",
-            value: "https://www.youtube.com",
-          },
-        ],
-      },
-      condition: {
-        urlFilter: "https://www.youtube.com/youtubei/v1/like/*",
-        resourceTypes: [ "xmlhttprequest" ],
-      },
-    },
-  ] satisfies DeclarativeNetRequest.Rule[];
-
-  // Clear existing rules and add the new rule
-  declarativeNetRequest.updateDynamicRules({
-    removeRuleIds: [ 1, 2 ],
-    addRules: rules,
-  });
+  // We no longer modify X-Frame-Options or Origin headers,
+  // as it violates Chrome Web Store policies.
 });
 
 runtime.onInstalled.addListener(() => {

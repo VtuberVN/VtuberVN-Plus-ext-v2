@@ -57,8 +57,9 @@ import outlineRaw from "@assets/img/outline.svg?raw";
   });
 
   const render: { tooltip: Function, button: Function } = {
-    tooltip: async (target: Element) => {
-      const nodes = document.querySelectorAll(selectors.tooltipID);
+    tooltip: async (target: Element | null) => {
+      if (!target) return;
+      const nodes = target.querySelectorAll(selectors.tooltipID);
       if (nodes.length === 1) return;
 
       console.debug("[VtuberVN+] (re)rendering VtuberVN tooltip within", target);
@@ -69,7 +70,8 @@ import outlineRaw from "@assets/img/outline.svg?raw";
       console.debug("[VtuberVN+] VtuberVN tooltip rendered:",
         target.querySelector(selectors.tooltipID));
     },
-    button: async (target: Element) => {
+    button: async (target: Element | null) => {
+      if (!target) return;
       const nodes = target.querySelectorAll(selectors.buttonID)
       for (const node of nodes)
         node.remove();
