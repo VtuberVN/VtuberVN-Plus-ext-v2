@@ -158,9 +158,9 @@ if (!isYouTubeHost) {
       box-shadow: none !important;
     }
     yt-live-chat-poll-renderer {
-      background: rgba(20, 20, 26, 0.85) !important;
-      backdrop-filter: blur(8px) !important;
-      -webkit-backdrop-filter: blur(8px) !important;
+      background: rgba(18, 18, 24, 0.82) !important;
+      backdrop-filter: blur(12px) !important;
+      -webkit-backdrop-filter: blur(12px) !important;
       border: 1px solid rgba(255, 255, 255, 0.12) !important;
       border-radius: 8px !important;
       margin: 4px 8px !important;
@@ -193,6 +193,67 @@ if (!isYouTubeHost) {
       background-color: rgba(var(--v-theme-primary), 0.75) !important;
     }
 
+    /* Engagement message cards, Subscriber-only mode banners & Chat Replay Announcement */
+    yt-live-chat-viewer-engagement-message-renderer,
+    yt-live-chat-mode-change-message-renderer,
+    yt-live-chat-restricted-participation-renderer {
+      background: transparent !important;
+      background-color: transparent !important;
+      border: none !important;
+    }
+    html[dark] yt-live-chat-viewer-engagement-message-renderer #card,
+    html[dark] yt-live-chat-mode-change-message-renderer #card,
+    html[dark] yt-live-chat-mode-change-message-renderer #content,
+    html[dark] yt-live-chat-restricted-participation-renderer #card {
+      background: rgba(18, 18, 24, 0.82) !important;
+      backdrop-filter: blur(12px) !important;
+      -webkit-backdrop-filter: blur(12px) !important;
+      border: 1px solid rgba(255, 255, 255, 0.12) !important;
+      border-radius: 8px !important;
+      margin: 4px 8px !important;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
+    }
+    html:not([dark]) yt-live-chat-viewer-engagement-message-renderer #card,
+    html:not([dark]) yt-live-chat-mode-change-message-renderer #card,
+    html:not([dark]) yt-live-chat-mode-change-message-renderer #content,
+    html:not([dark]) yt-live-chat-restricted-participation-renderer #card {
+      background: rgba(245, 245, 248, 0.88) !important;
+      backdrop-filter: blur(12px) !important;
+      -webkit-backdrop-filter: blur(12px) !important;
+      border: 1px solid rgba(0, 0, 0, 0.1) !important;
+      border-radius: 8px !important;
+      margin: 4px 8px !important;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06) !important;
+    }
+    html[dark] yt-live-chat-viewer-engagement-message-renderer #card *,
+    html[dark] yt-live-chat-mode-change-message-renderer #card *,
+    html[dark] yt-live-chat-mode-change-message-renderer #content *,
+    html[dark] yt-live-chat-restricted-participation-renderer #card * {
+      color: #f1f1f5 !important;
+    }
+    html:not([dark]) yt-live-chat-viewer-engagement-message-renderer #card *,
+    html:not([dark]) yt-live-chat-mode-change-message-renderer #card *,
+    html:not([dark]) yt-live-chat-mode-change-message-renderer #content *,
+    html:not([dark]) yt-live-chat-restricted-participation-renderer #card * {
+      color: #0f0f0f !important;
+    }
+    html[dark] yt-live-chat-viewer-engagement-message-renderer #card a,
+    html[dark] yt-live-chat-mode-change-message-renderer #card a,
+    html[dark] yt-live-chat-restricted-participation-renderer #card a,
+    html[dark] yt-live-chat-viewer-engagement-message-renderer #card .yt-core-attributed-string__link,
+    html[dark] yt-live-chat-mode-change-message-renderer #card .yt-core-attributed-string__link {
+      color: #3ea6ff !important;
+      text-decoration: underline !important;
+    }
+    html:not([dark]) yt-live-chat-viewer-engagement-message-renderer #card a,
+    html:not([dark]) yt-live-chat-mode-change-message-renderer #card a,
+    html:not([dark]) yt-live-chat-restricted-participation-renderer #card a,
+    html:not([dark]) yt-live-chat-viewer-engagement-message-renderer #card .yt-core-attributed-string__link,
+    html:not([dark]) yt-live-chat-mode-change-message-renderer #card .yt-core-attributed-string__link {
+      color: #065fd4 !important;
+      text-decoration: underline !important;
+    }
+
     /* Pinned messages & banners */
     yt-live-chat-banner-manager,
     yt-live-chat-banner-renderer {
@@ -202,9 +263,9 @@ if (!isYouTubeHost) {
       box-shadow: none !important;
     }
     yt-live-chat-pinned-message-renderer {
-      background: rgba(20, 20, 26, 0.85) !important;
-      backdrop-filter: blur(8px) !important;
-      -webkit-backdrop-filter: blur(8px) !important;
+      background: rgba(18, 18, 24, 0.82) !important;
+      backdrop-filter: blur(12px) !important;
+      -webkit-backdrop-filter: blur(12px) !important;
       border-left: 3px solid rgba(var(--v-theme-primary), 0.85) !important;
       border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
       border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
