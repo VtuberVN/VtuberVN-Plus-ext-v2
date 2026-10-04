@@ -91,7 +91,7 @@ const Popup = () => {
       <div className="header-card">
         <h1 className="options-title" style={{ display: 'flex', alignItems: 'center' }}>
           <img src={logoUrl} alt="Logo" style={{ width: '24px', height: '24px', marginRight: '8px', verticalAlign: 'middle', borderRadius: '4px' }} />
-          <span>VtuberVN+</span>
+          <span>VtuberVN Star</span>
           <span style={{
             marginLeft: '8px',
             fontSize: '11px',
@@ -187,7 +187,7 @@ const Popup = () => {
         alignItems: 'center',
         borderTop: '1px solid rgba(255, 255, 255, 0.08)'
       }}>
-        <span>VtuberVN+ • Full Edition</span>
+        <span>VtuberVN Star • Full Edition</span>
       </div>
     </div>
   );

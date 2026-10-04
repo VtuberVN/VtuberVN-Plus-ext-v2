@@ -1,161 +1,77 @@
-<div align="center">
-<img src="public/icon-128.png" alt="logo"/>
-<h1> Minimalist Chrome/Firefox Extension Boilerplate with<br/>React + Vite + TypeScript + TailwindCSS</h1>
+# VtuberVN Star (Browser Extension v2)
 
-<h5>
-This template repository is a side product of my Chrome Extension <a target="_blank" rel="noopener noreferrer" href="https://chrome.google.com/webstore/detail/supatabs/icbcnjlaegndjabnjbaeihnnmidbfigk">Supatabs</a>.
-<br />
-If you tend to have tons of tabs open, or are a OneTab user, make sure to check it out <a target="_blank" rel="noopener noreferrer" href="https://chrome.google.com/webstore/detail/supatabs/icbcnjlaegndjabnjbaeihnnmidbfigk">here</a>!
-</h5>
+Tiện ích mở rộng chính thức cho nền tảng [VtuberVN](https://vtuberhub.vn), tối ưu trải nghiệm xem livestream, video và tương tác YouTube trực tiếp trên nền tảng web.
 
-<h5>Supatabs is an example and showcase of what you can develop with this template. (anything you want, really 🚀)</h5>
+---
 
-</div>
+## 🌟 Tính Năng Chính
 
-## Table of Contents
+- **Khung Live Chat Kính Mờ (Glassmorphic Chat)**: Tự động mở khung chat cho stream trực tiếp và stream đã kết thúc trên trang Watch và Multiview.
+- **Tương tác YouTube Trực tiếp**: Nhấn Thích (Like), Đăng ký kênh (Subscribe) và gửi bình luận trực tiếp từ giao diện VtuberVN.
+- **Cầu nối Sóng Nhạc (Audio Visualizer Bridge)**: Trích xuất và truyền dữ liệu FFT âm thanh từ YouTube player sang bộ hiển thị sóng nhạc của VtuberVN.
+- **Nút Chuyển Nhanh trên YouTube**: Tự động thêm nút "Xem trên VtuberVN" vào thanh tác vụ video YouTube (Ctrl + Click để mở Multiview).
+- **Thu thập Số liệu Thời gian thực (Crowdsourcing Telemetry)**: Hỗ trợ đồng bộ CCV và lượt thích thực tế về hệ thống hiển thị của website.
+- **Tùy chỉnh Nhanh (Options Popup)**: Bảng cài đặt trên thanh công cụ cho phép bật/tắt các tính năng, điều chỉnh FPS sóng nhạc và chuyển đổi ngôn ngữ (VI/EN).
 
-- [Intro](#intro)
-- [Features](#features)
-- [Usage](#usage)
-  - [Getting Started](#gettingStarted) 
-  - [Customization](#customization)
-  - [Publish](#publish)
-- [Tech Docs](#tech)
-- [Credit](#credit)
-- [Contributing](#contributing)
+---
 
+## 🚀 Cài Đặt Trình Duyệt
 
-## Intro <a name="intro"></a>
-This boilerplate is meant to be a minimal quick start for creating chrome/firefox extensions using React, Typescript and Tailwind CSS.
+### 1. Chrome / Edge / Brave / Cốc Cốc
+1. Mở trang quản lý tiện ích: `chrome://extensions/` (hoặc `edge://extensions/`).
+2. Bật công tắc **Developer mode (Chế độ cho nhà phát triển)** ở góc trên bên phải.
+3. Cài đặt theo 1 trong 2 cách:
+   - **File .CRX**: Kéo thả file `vtubervn-plus-v2-v2.0.2.crx` vào trình duyệt và chọn *Add extension*.
+   - **File .ZIP**: Giải nén file `vtubervn-plus-v2-v2.0.2-chrome.zip`, nhấn **Load unpacked (Tải tiện ích đã giải nén)** và chọn thư mục vừa giải nén.
 
-It includes all possible pages such as **new tab**, **dev panel**, **pop up**, etc., as well as corresponding manifest settings by default.
-You will likely have to customize/delete some of the pages (see docs below).
+### 2. Mozilla Firefox
+1. Mở trang `about:addons`.
+2. Nhấn vào biểu tượng bánh răng ⚙️ ở góc phải &rarr; chọn **Install Add-on From File...**.
+3. Chọn file `vtubervn-plus-v2-v2.0.2.xpi`.
 
-You can build dist files for both Chrome and Firefox with manifest v3.
+---
 
-If you are looking for a React focused way to access the local storage, I also implemented a chrome local/sync storage hook. The hook works
-well with this template. [Check it out here](https://gist.github.com/JohnBra/c81451ea7bc9e77f8021beb4f198ab96).
+## 💻 Hướng Dẫn Phát Triển & Đóng Gói (Developer Guide)
 
-## Features <a name="features"></a>
-- [React 18](https://reactjs.org/)
-- [TypeScript](https://www.typescriptlang.org/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [i18n (optional)](https://developer.chrome.com/docs/extensions/reference/api/i18n)
-- [ESLint](https://eslint.org/)
-- [Chrome Extension Manifest Version 3](https://developer.chrome.com/docs/extensions/mv3/intro/)
-- [Github Action](https://github.com/JohnBra/vite-web-extension/actions/workflows/ci.yml) to build and zip your extension (manual trigger)
+### Yêu cầu
+- Node.js >= 18.0.0
+- Yarn hoặc NPM
 
-## Usage <a name="usage"></a>
-
-### Getting Started <a name="gettingStarted"></a>
-
-#### Developing and building
-This template comes with build configs for both Chrome and Firefox. Running
-`dev` or `build` commands without specifying the browser target will build
-for Chrome by default.
-
-1. Clone this repository or click "Use this template"
-2. Change `name` and `description` in `manifest.json`
-3. Run `yarn` or `npm i` (check your node version >= 16)
-4. Run `yarn dev[:chrome|:firefox]`, or `npm run dev[:chrome|:firefox]`
-
-Running a `dev` command will build your extension and watch for changes in the 
-source files. Changing the source files will refresh the corresponding 
-`dist_<chrome|firefox>` folder.
-
-To create an optimized production build, run `yarn build[:chrome|:firefox]`, or
-`npm run build[:chrome|:firefox]`.
-
-#### Load your extension
-For Chrome
-1. Open - Chrome browser
-2. Access - [chrome://extensions](chrome://extensions)
-3. Tick - Developer mode
-4. Find - Load unpacked extension
-5. Select - `dist_chrome` folder in this project (after dev or build)
-
-For Firefox
-1. Open - Firefox browser
-2. Access - [about:debugging#/runtime/this-firefox](about:debugging#/runtime/this-firefox)
-3. Click - Load temporary Add-on
-4. Select - any file in `dist_firefox` folder (i.e. `manifest.json`) in this project (after dev or build)
-
-### Customization <a name="customization"></a>
-
-#### Adding / removing pages
-The template includes **all** of the extension pages (i.e. New Tab, Dev Panel, Popup, etc.).
-You will likely have to customize it to fit your needs.
-
-E.g. you don't want the newtab page to activate whenever you open a new tab:
-1. remove the directory `newtab` and its contents in `src/pages`
-2. remove `chrome_url_overrides: { newtab: 'src/pages/newtab/index.html' },` in `manifest.json`
-
-If you need to declare pages in addition to the manifest pages, e.g. a custom `app` page, create a 
-new folder in the `pages` directory and add the corresponding `.html`, `.tsx` and `.css` 
-files (see `options/*` for an example to copy). Then include the root html in the `vite.config.base.ts` 
-file under `build.rollupOptions.input` like so:
-
-```typescript
-// ...
-build: {
-   rollupOptions: {
-      input: {
-         app: resolve(pagesDir, "app", "index.html"),
-      },
-      output: {
-         entryFileNames: (chunk) => `src/pages/${chunk.name}/index.js`,
-      },
-   },
-}
-// ...
+### Cài đặt dependencies
+```bash
+yarn install
 ```
 
-#### Styling
-CSS files in the `src/pages/*` directories are not necessary. They are left in there in case you want 
-to use it in combination with Tailwind CSS. **Feel free to delete them**.
+### Chạy Development Mode (Hot Reload)
+```bash
+# Cho trình duyệt Chromium (Chrome, Edge, Brave...)
+yarn dev:chrome
 
-Tailwind can be configured as usual in the `tailwind.config.cjs` file. See doc link below.
+# Cho Firefox
+yarn dev:firefox
+```
+Sau đó load thư mục `dist_chrome` hoặc `dist_firefox` vào trình duyệt.
 
-#### Internationalization (i18n)
-To enable internationalization set the `localize` flag in the `vite.config.base.ts` to `true`.
+### Đóng gói Production Release (Không chứa dữ liệu mật / Không localhost)
+```bash
+# Đóng gói bản Production (CRX, ZIP, XPI)
+yarn pack
 
-The template includes a directory `locales` with a basic setup for english i18n. Enabling i18n
-will pull the name and description for your extension from the english translation files instead
-of the manifest.
+# Đóng gói cả bản Production và Development
+yarn package:all
+```
+Các gói phát hành đầu ra sẽ được lưu tại thư mục `packages/prod/`.
 
-Follow the instructions in the [official docs](https://developer.chrome.com/docs/extensions/reference/api/i18n#description) 
-to add other translations and retrieve them in the extension.
+---
 
-If you don't need i18n you can ignore the `locales` directory until you need it, as it won't
-be copied into the build folder unless the `localize` flag is set to `true`.
+## 🔒 Quyền Riêng Tư & Bảo Mật
 
-### Publish your extension to the CWS<a name="publish"></a>
-To upload an extension to the Chrome store you have to pack (zip) it and then upload it to your item 
-in the Chrome Web Store.
+- Tiện ích chạy hoàn toàn cục bộ trên trình duyệt của người dùng.
+- Mọi thao tác tương tác YouTube (Like, Subscribe, Comment) được gửi trực tiếp đến API của YouTube thông qua phiên đăng nhập hiện hành của trình duyệt.
+- Không thu thập mật khẩu, cookie riêng tư hay thông tin cá nhân. Mã nguồn mở minh bạch 100%.
 
-This repo includes a Github Action Workflow to create a 
-[optimized prod build and the zip file](https://github.com/JohnBra/vite-web-extension/actions/workflows/ci.yml).
+---
 
-To run the workflow do the following:
-1. Go to the **"Actions"** tab in your forked repository from this template
-2. In the left sidebar click on **"Build and Zip Chrome Extension"**
-3. Click on **"Run Workflow"** and select the main branch, then **"Run Workflow"**
-4. Refresh the page and click the most recent run
-5. In the summary page **"Artifacts"** section click on the generated **"vite-web-extension-chrome"**
-6. Upload this file to the Chrome Web Store as described [here](https://developer.chrome.com/docs/webstore/publish/)
+## 📄 Bản Quyền
 
-# Tech Docs <a name="tech"></a>
-- [Vite](https://vitejs.dev/)
-- [Vite Plugin](https://vitejs.dev/guide/api-plugin.html)
-- [Chrome Extension with manifest 3](https://developer.chrome.com/docs/extensions/mv3/)
-- [Chrome Extension i18n](https://developer.chrome.com/docs/extensions/reference/api/i18n#description)
-- [Rollup](https://rollupjs.org/guide/en/)
-- [@crxjs/vite-plugin](https://crxjs.dev/vite-plugin)
-- [Tailwind CSS](https://tailwindcss.com/docs/configuration)
-
-# Credit <a name="credit"></a>
-Heavily inspired by [Jonghakseo's vite chrome extension boilerplate](https://github.com/Jonghakseo/chrome-extension-boilerplate-react-vite). 
-It uses SASS instead of TailwindCSS and is ~~slightly~~ _a lot_ less minimalist in case you want to check it out.
-
-# Contributing <a name="contributing"></a>
-Feel free to open PRs or raise issues!
+Phát triển bởi đội ngũ **VtuberVN**. Giấy phép [MIT](LICENSE).

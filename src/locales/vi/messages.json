@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "VtuberVN+",
+    "message": "VtuberVN Star",
     "description": "Extension name"
   },
   "extDescription": {
-    "message": "Tiện ích đồng hành chính thức cho VtuberVN. Hỗ trợ đồng bộ lịch sử xem, trạng thái thích video, quản lý bình luận/chat Youtube và truyền dữ liệu sóng nhạc cho bộ phát nhúng.",
+    "message": "Tiện ích mở rộng trợ thủ xem livestream và video trên VtuberVN: đồng bộ Live Chat kính mờ, chuyển nhanh YouTube sang VtuberVN, và kết nối sóng nhạc.",
     "description": "Extension description"
   }
 }

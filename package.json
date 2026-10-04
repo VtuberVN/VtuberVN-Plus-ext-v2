@@ -1,11 +1,11 @@
 {
-  "name": "vtubervn-plus",
+  "name": "vtubervn-star",
   "version": "2.0.2",
-  "description": "VtuberVN★ Companion Extension (V2) - Enhanced YouTube Stream Viewing on VtuberVN.",
+  "description": "VtuberVN Star Extension - Trợ thủ xem livestream và tương tác video trên VtuberVN.",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/VtuberVN/VtuberVN-Plus-ext-v2.git"
+    "url": "https://github.com/VtuberVN/VtuberVN_Star.git"
   },
   "scripts": {
     "build": "yarn build:chrome && yarn build:firefox",
