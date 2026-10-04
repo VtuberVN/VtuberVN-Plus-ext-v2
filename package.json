@@ -1,16 +1,21 @@
 {
   "name": "vtubervn-plus",
-  "version": "2.0.1",
-  "description": "A simple chrome & firefox extension template with Vite, React, TypeScript and Tailwind CSS.",
+  "version": "2.0.2",
+  "description": "VtuberVN★ Companion Extension (V2) - Enhanced YouTube Stream Viewing on VtuberVN.",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/JohnBra/vite-web-extension.git"
+    "url": "https://github.com/VtuberVN/VtuberVN-Plus-ext-v2.git"
   },
   "scripts": {
     "build": "yarn build:chrome && yarn build:firefox",
     "build:chrome": "vite build --config vite.config.chrome.ts",
     "build:firefox": "vite build --config vite.config.firefox.ts",
+    "pack": "node scripts/pack.js",
+    "package": "node scripts/pack.js",
+    "package:prod": "node scripts/pack.js",
+    "package:local": "node scripts/pack.js --local",
+    "package:all": "node scripts/pack.js --all",
     "dev": "nodemon --config nodemon.chrome.json",
     "dev:chrome": "nodemon --config nodemon.chrome.json",
     "dev:firefox": "nodemon --config nodemon.firefox.json"

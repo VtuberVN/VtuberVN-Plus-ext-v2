@@ -1,5 +1,22 @@
 import type { ManifestV3Export } from "@crxjs/vite-plugin";
 
+const isProd = process.env.BUILD_TARGET === "prod" || process.env.NO_LOCAL === "true";
+
+const localMatches = isProd
+  ? []
+  : [
+      "http://localhost:8080/*",
+      "http://127.0.0.1:8080/*",
+      "http://localhost:3000/*",
+      "http://127.0.0.1:3000/*",
+    ];
+
+const vtuberMatches = [
+  "*://*.vtuberhub.vn/*",
+  "*://vtuberhub.vn/*",
+  ...localMatches,
+];
+
 const manifest = {
   manifest_version: 3,
   version: "<get from package.json>",
@@ -30,19 +47,15 @@ const manifest = {
   permissions: [
     "tabs",
     "storage",
-    "contextMenus"
+    "contextMenus",
   ],
   host_permissions: [
     "*://*.youtube.com/*",
-    "*://*.vtuberhub.vn/*",
-    "*://vtuberhub.vn/*"
+    ...vtuberMatches,
   ],
   content_scripts: [
     {
-      matches: [
-        "*://*.vtuberhub.vn/*",
-        "*://vtuberhub.vn/*"
-      ],
+      matches: vtuberMatches,
       js: ["src/pages/content/vtubervn/contentScript.ts"],
       all_frames: true,
       run_at: "document_start",
@@ -73,10 +86,6 @@ const manifest = {
       run_at: "document_start",
     },
   ],
-  // "devtools_page": "src/pages/devtools/index.html",
-  // "chrome_url_overrides": {
-  //   "newtab": "src/pages/newtab/index.html"
-  // },
   browser_specific_settings: {
     gecko: {
       id: "{7ff078b3-b3e9-44df-a646-45c702b2e17c}",
@@ -90,11 +99,10 @@ const manifest = {
       resources: ["assets/*", "src/*"],
       matches: [
         "*://*.youtube.com/*",
-        "*://*.vtuberhub.vn/*",
-        "*://vtuberhub.vn/*"
-      ]
-    }
-  ]
+        ...vtuberMatches,
+      ],
+    },
+  ],
 } as const satisfies ManifestV3Export;
 
 export default manifest;

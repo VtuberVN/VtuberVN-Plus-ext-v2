@@ -390,3 +390,12 @@ $RECYCLE.BIN/
 
 #generated manifest
 public/manifest.json
+
+# Extension packages & signing keys
+*.pem
+*.crx
+*.xpi
+packages/
+dist_*.crx
+dist_*.pem
+

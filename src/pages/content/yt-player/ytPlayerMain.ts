@@ -1,7 +1,7 @@
-// Script chạy trong MAIN world của YouTube embed iframe
-// Có quyền truy cập trực tiếp vào window.ytcfg và window.ytInitialPlayerResponse
-// Không bị chặn bởi CSP (content script bypass CSP hoàn toàn)
-// Không được dùng chrome.* APIs ở đây
+// Script running in YouTube embed iframe MAIN execution world
+// Directly accesses window.ytcfg and window.ytInitialPlayerResponse
+// Free from CSP restrictions (content script bypasses CSP)
+// Note: chrome.* APIs are not available in MAIN world
 
 (function () {
   interface YtcfgLike {
@@ -33,7 +33,7 @@
 
     let pr = (window as Window & { ytInitialPlayerResponse?: PlayerResponse }).ytInitialPlayerResponse;
 
-    // Fallback: thử đọc từ PLAYER_VARS.embedded_player_response
+    // Fallback: extract from PLAYER_VARS.embedded_player_response
     if (!pr && apiKey) {
       const rawPlayerVars = get("PLAYER_VARS");
       if (rawPlayerVars) {
@@ -59,13 +59,12 @@
   }
 
   function send() {
-    window.postMessage({ type: "VTUBERVN_YTDATA_FROM_MAIN", data: extract() }, "*");
+    window.postMessage({ type: "VTUBERVN_YTDATA_FROM_MAIN", data: extract() }, window.location.origin);
   }
 
-  // Lắng nghe request từ isolated world content script
-  // Mỗi request được trả lời với trạng thái hiện tại của window.ytcfg
-  // (isolated world sẽ retry mỗi 500ms cho đến khi có dữ liệu)
+  // Listen for request from isolated world content script
   window.addEventListener("message", (event: MessageEvent<{ type?: string }>) => {
+    if (event.origin !== window.location.origin && event.origin !== "https://www.youtube.com") return;
     if (event.data?.type === "VTUBERVN_REQUEST_YTDATA") {
       send();
     }

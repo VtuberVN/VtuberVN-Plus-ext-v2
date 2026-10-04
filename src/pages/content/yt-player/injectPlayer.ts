@@ -2,77 +2,59 @@ import { ClientType, Innertube, UniversalCache } from "youtubei.js";
 import { ProtoframeDescriptor, ProtoframePubsub } from "protoframe";
 import type Format from "youtubei.js/dist/src/parser/classes/misc/Format";
 
-console.log("[VtuberVN+]", "Initializing");
-
-// // List of flags and desired values
-// const overrides: Record<string, string> = {
-//   autoplay_time: "8000",
-//   autoplay_time_for_music_content: "3000",
-//   csi_on_gel: "true",
-//   disable_features_for_supex: "true",
-//   disable_legacy_desktop_remote_queue: "true",
-//   enable_client_sli_logging: "true",
-//   enable_gel_log_commands: "true",
-//   offline_error_handling: "true",
-//   player_doubletap_to_seek: "true",
-//   preskip_button_style_ads_backend: "countdown_next_to_thumbnail",
-//   web_deprecate_service_ajax_map_dependency: "true",
-//   web_forward_command_on_pbj: "true",
-//   should_clear_video_data_on_player_cued_unstarted: "true",
-//   ytidb_fetch_datasync_ids_for_data_cleanup: "true",
-//   web_player_nitrate_promo_tooltip: "true",
-//   web_player_move_autonav_toggle: "true",
-
-//   enable_cookie_reissue_iframe: "false",
-//   shorten_initial_gel_batch_timeout: "false",
-
-//   html5_enable_dai_single_video_ad: "false",
-//   html5_onesie: "false",
-//   html5_onesie_host_probing: "false",
-//   html5_onesie_media_bytes: "false",
-//   html5_onesie_player_config: "false",
-//   html5_onesie_player_config_webfe: "false",
-//   html5_onesie_server_initial_format_selection: "false",
-//   html5_onesie_wait_for_media_availability: "false",
-//   html5_skip_setVideoData: "false",
-//   html5_streaming_xhr: "false",
-// };
-
-// // @ts-expect-error "ytcfg" is a YT global
-// const cfg = window.ytcfg;
-
-// if (!cfg) {
-//   console.warn("[VtuberVN+]", "disablePlayability: ytcfg is missing");
-// } else {
-//   console.log(
-//     "[VtuberVN+]",
-//     "Configuring overrides, hopefully this is before the player loads", 
-//     // @ts-expect-error "yt" is a YT global
-//     Object.keys(window.yt.player)
-//   );
-//   const configs = cfg.get("WEB_PLAYER_CONTEXT_CONFIGS");
-//   let flags =
-//     configs?.WEB_PLAYER_CONTEXT_CONFIG_ID_EMBEDDED_PLAYER
-//       ?.serializedExperimentFlags;
-//   if (flags) {
-//     Object.keys(overrides).forEach((key) => {
-//       const regex = new RegExp(`(?<=${key}=)[^&]+(?<!&)`);
-//       const val = overrides[key];
-//       if (flags.match(regex)) {
-//         flags = flags.replace(regex, val);
-//       } else {
-//         flags += `&${key}=${val}`;
-//       }
-//     });
-//     configs.WEB_PLAYER_CONTEXT_CONFIG_ID_EMBEDDED_PLAYER.serializedExperimentFlags =
-//       flags;
-//     configs.WEB_PLAYER_CONTEXT_CONFIG_ID_EMBEDDED_PLAYER.isEmbed = false;
-//     console.log("[VtuberVN+]", "Sucessfully set overrides");
-//   }
-// }
-
-interface YTFFormat extends Format {
+if (!import.meta.env.DEV) {
+  const _log = console.log;
+  console.log = (
+    ...args: Array<string | number | boolean | object | null | undefined>
+  ) => {
+    if (
+      args.length > 0 &&
+      typeof args[0] === "string" &&
+      args[0].includes("[VtuberVN")
+    ) {
+      return;
+    }
+    _log(...args);
+  };
 }
+
+// Fix YouTube player non-passive event listener warnings in console
+try {
+  const originalAdd = EventTarget.prototype.addEventListener;
+  EventTarget.prototype.addEventListener = function (
+    this: EventTarget,
+    type: string,
+    listener: EventListenerOrEventListenerObject | null,
+    options?: boolean | AddEventListenerOptions,
+  ) {
+    let opt: boolean | AddEventListenerOptions | undefined = options;
+    if (
+      type === "touchstart" ||
+      type === "touchmove" ||
+      type === "wheel" ||
+      type === "mousewheel"
+    ) {
+      if (typeof opt === "boolean") {
+        opt = { capture: opt, passive: true };
+      } else if (typeof opt === "object" && opt !== null) {
+        if (opt.passive === undefined) {
+          opt = { ...opt, passive: true };
+        }
+      } else {
+        opt = { passive: true };
+      }
+    }
+    return originalAdd.call(this, type, listener, opt);
+  };
+} catch (e) {
+  void e;
+}
+
+if (import.meta.env.DEV) {
+  console.log("[VtuberVN+]", "Initializing");
+}
+
+interface YTFFormat extends Format {}
 
 const ytAudioDLProtocol: ProtoframeDescriptor<{
   fetchAudio: {
@@ -103,6 +85,7 @@ function u8ToB64(u8: Uint8Array, urlSafe = false) {
   return urlSafe ? base64.replace(/\//g, "_").replace(/\+/g, "-") : base64;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy cipher: Raw input can be a string or a custom obfuscated array structure from YouTube.
 function computeHash(input: string | any[], start = 0, end = input.length) {
   let hash = 0;
   for (let i = start; i < end; i++) {
@@ -112,13 +95,15 @@ function computeHash(input: string | any[], start = 0, end = input.length) {
   return hash;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy cipher: Key material input can be an obfuscated array structure representing visitors data.
 function generateKeyPair(keyMaterial: string | any[]) {
   const mid = keyMaterial.length >> 1;
-  return [ computeHash(keyMaterial, 0, mid), computeHash(keyMaterial, mid) ];
+  return [computeHash(keyMaterial, 0, mid), computeHash(keyMaterial, mid)];
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy cipher: Key material input is decoded as an obfuscated array structure.
 function transformData(data: Uint8Array, keyMaterial: string | any[]) {
-  const [ key1, key2 ] = generateKeyPair(keyMaterial);
+  const [key1, key2] = generateKeyPair(keyMaterial);
   const data32 = new Uint32Array(data.buffer);
   const firstWord = data32[0];
 
@@ -145,15 +130,21 @@ function transformData(data: Uint8Array, keyMaterial: string | any[]) {
   }
 }
 
-function decodeCachedPoToken(identifier: string | any[], encodedPoToken: string | null) {
-  const data = b64ToU8(typeof encodedPoToken === "string" ? encodedPoToken : "");
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy cipher: YouTube visitor identifier structure varies and is parsed as any array.
+function decodeCachedPoToken(
+  identifier: string | any[],
+  encodedPoToken: string | null,
+) {
+  const data = b64ToU8(
+    typeof encodedPoToken === "string" ? encodedPoToken : "",
+  );
   transformData(data, identifier);
 
   let index = 4;
   while (index < 7 && data[index] === 0) index++;
 
   // Not sure if these ever change, they're hardcoded in the original code. It's obviously for some kind of validation.
-  const VALIDATION_BYTES = [ 196, 200, 224, 18 ];
+  const VALIDATION_BYTES = [196, 200, 224, 18];
 
   for (let i = 0; i < VALIDATION_BYTES.length; i++) {
     if (data[index++] !== VALIDATION_BYTES[i])
@@ -170,7 +161,6 @@ function decodeCachedPoToken(identifier: string | any[], encodedPoToken: string 
     poToken,
   };
 }
-
 
 const manager = ProtoframePubsub.iframe(ytAudioDLProtocol);
 
@@ -189,16 +179,23 @@ manager.handleAsk(
     }
     try {
       // access sessionstorage
-      const ytGlobal = (window as Window & { yt?: { config_?: Record<string, string | undefined> } }).yt;
+      const ytGlobal = (
+        window as Window & {
+          yt?: { config_?: Record<string, string | undefined> };
+        }
+      ).yt;
       const visitorData =
-        ytGlobal?.config_?.["DATASYNC_ID"] || ytGlobal?.config_?.["VISITOR_DATA"];
+        ytGlobal?.config_?.["DATASYNC_ID"] ||
+        ytGlobal?.config_?.["VISITOR_DATA"];
       const potKey = window.sessionStorage.getItem("iU5q-!O9@$");
-      console.log(potKey)
-      const potValue = window.sessionStorage.getItem((potKey ?? "_").split(",")[1]);
+      console.log(potKey);
+      const potValue = window.sessionStorage.getItem(
+        (potKey ?? "_").split(",")[1],
+      );
 
       // The first value should be either the user's visitor data or their datasync id (if they're logged in).
       console.log(visitorData, potValue);
-      const potToken = decodeCachedPoToken(visitorData, potValue);
+      const potToken = decodeCachedPoToken(visitorData || "", potValue);
       console.log(potToken);
 
       const innertube = await Innertube.create({
@@ -208,7 +205,7 @@ manager.handleAsk(
         po_token: potToken.poToken,
         client_type: ClientType.WEB_EMBEDDED,
         fetch: async (url, options) => {
-          console.log(`Fetching: ${ url }, options: ${ JSON.stringify(options) }`);
+          console.log(`Fetching: ${url}, options: ${JSON.stringify(options)}`);
           let response = await window.fetch(url, {
             ...options,
             // redirect: "manual",
@@ -218,7 +215,7 @@ manager.handleAsk(
           if (response.status === 301 || response.status === 302) {
             const redirectedUrl = response.headers.get("Location");
             if (redirectedUrl) {
-              console.log(`Redirected to: ${ redirectedUrl }`);
+              console.log(`Redirected to: ${redirectedUrl}`);
               // Make a new request to the redirected URL, including headers if needed
               response = await window.fetch(redirectedUrl, {
                 ...options,

@@ -1,27 +1,28 @@
 /**
  * [VtuberVN+] Audio Capture & Visualizer Bridge
  *
- * Chạy BÊN TRONG YouTube embed iframe (injected vào page context).
- * KHÔNG TỰ ĐỘNG CHẠY — chỉ bắt đầu capture khi nhận message
- * VTUBERVN_AUDIO_CAPTURE_START từ main app.
+ * Runs inside YouTube embed iframe (injected into page context).
+ * Does not start automatically — only captures when receiving
+ * VTUBERVN_AUDIO_CAPTURE_START message from the main application.
  *
- * Mỗi instance có sessionId riêng để main app phân biệt
- * iframe music player vs iframe live/video khác.
+ * Each instance maintains its own sessionId so the host application
+ * can differentiate between music player iframes and live/video streams.
  *
  * Flow:
- *   Main app gửi START (kèm sessionId) → chỉ đúng iframe music player nhận
- *   → captureStream() + AnalyserNode → gửi FFT data kèm sessionId
- *   → Main app filter theo sessionId → render visualizer
+ *   Main app sends START (with sessionId) -> targeted music iframe receives
+ *   -> captureStream() + AnalyserNode -> emits FFT data with sessionId
+ *   -> Main app filters by sessionId -> renders visualizer canvas
  */
 
 console.log('[VtuberVN+] Audio Capture: Loaded (standby mode)');
 
-const FFT_SIZE = 512;       // 256 frequency bins — cân đối, mượt mà cho visualizer
-const ACTIVE_FPS = 60;      // Khi mở sóng nhạc (mượt mà)
-const BACKGROUND_FPS = 5;   // Khi bị khuất / ẩn / thu nhỏ (tiết kiệm CPU)
-const HEARTBEAT_INTERVAL = 5000; // Gửi heartbeat mỗi 5 giây
+const FFT_SIZE = 512;          // 256 frequency bins — balanced and smooth for visualizer
+const DEFAULT_ACTIVE_FPS = 60; // Default active visualizer frame rate
+let activeFps = DEFAULT_ACTIVE_FPS; // Configurable FPS limit from settings
+const BACKGROUND_FPS = 5;      // When tab/window is hidden or minimized (CPU saving)
+const HEARTBEAT_INTERVAL = 5000; // Send heartbeat ping every 5 seconds
 
-// Trạng thái hiển thị để áp dụng Adaptive FPS dựa trên VisibilityState của tab
+// Viewport visibility state to apply adaptive FPS throttling based on document visibility
 let isDocumentVisible = document.visibilityState === 'visible';
 
 document.addEventListener('visibilitychange', () => {
@@ -75,7 +76,7 @@ const addGestureListeners = () => {
 };
 
 /**
- * Tìm <video> element trong YouTube embed.
+ * Locate <video> element inside YouTube embed player.
  */
 function findVideoElement(): HTMLVideoElement | null {
   const video = document.querySelector('video.html5-main-video') as HTMLVideoElement | null;
@@ -84,19 +85,19 @@ function findVideoElement(): HTMLVideoElement | null {
 }
 
 /**
- * Thiết lập AudioContext + AnalyserNode từ video element.
- * Guard: nếu sourceNode đã tồn tại cho đúng video này → reuse, không tạo lại.
- * createMediaElementSource() chỉ được gọi 1 lần trên mỗi video element.
+ * Configure AudioContext + AnalyserNode from video element.
+ * Guard: if sourceNode already exists for this video -> reuse, do not recreate.
+ * createMediaElementSource() must only be called once per video element.
  */
 function setupAudioCapture(video: HTMLVideoElement): boolean {
-  // Đã setup đúng video này và tất cả node vẫn live → reuse hoàn toàn
+  // Already configured for this video element and nodes are alive -> reuse
   if (capturedVideo === video && audioContext && analyser && sourceNode) {
-    isCapturing = true
-    return true
+    isCapturing = true;
+    return true;
   }
 
   try {
-    // Tạo AudioContext nếu chưa có hoặc đã bị close
+    // Create AudioContext if not initialized or previously closed
     if (!audioContext || audioContext.state === 'closed') {
       const AudioCtx = window.AudioContext || (window as CustomWindow).webkitAudioContext;
       if (!AudioCtx) {
@@ -106,60 +107,60 @@ function setupAudioCapture(video: HTMLVideoElement): boolean {
     }
 
     if (!analyser) {
-      analyser = audioContext.createAnalyser()
-      analyser.fftSize = FFT_SIZE
-      analyser.smoothingTimeConstant = 0.8
+      analyser = audioContext.createAnalyser();
+      analyser.fftSize = FFT_SIZE;
+      analyser.smoothingTimeConstant = 0.8;
     }
 
-    // Chỉ tạo sourceNode MỚI khi video thay đổi hoặc chưa có
-    // Tránh gọi createMediaElementSource 2 lần trên cùng 1 video → InvalidStateError
+    // Only create new sourceNode when video changes or not yet initialized
+    // Avoid calling createMediaElementSource twice on same video -> InvalidStateError
     if (capturedVideo !== video || !sourceNode) {
       if (sourceNode) {
-        try { sourceNode.disconnect() } catch (_) {}
-        sourceNode = null
+        try { sourceNode.disconnect(); } catch (_) {}
+        sourceNode = null;
       }
-      sourceNode = audioContext.createMediaElementSource(video)
-      sourceNode.connect(analyser)
-      analyser.connect(audioContext.destination)
-      capturedVideo = video
+      sourceNode = audioContext.createMediaElementSource(video);
+      sourceNode.connect(analyser);
+      analyser.connect(audioContext.destination);
+      capturedVideo = video;
 
-      // Tự động resume AudioContext khi video phát
+      // Automatically resume AudioContext when video plays
       const resumeContext = () => {
         if (audioContext && audioContext.state === 'suspended') {
           audioContext.resume().then(() => {
-            console.log('[VtuberVN+] Audio Capture: AudioContext resumed via video event')
+            console.log('[VtuberVN+] Audio Capture: AudioContext resumed via video event');
             removeGestureListeners();
           }).catch((err) => {
-            console.warn('[VtuberVN+] Audio Capture: Resume failed via video event -', err)
-            // Nếu resume qua video event (autoplay) thất bại, lắng nghe tương tác người dùng
+            console.warn('[VtuberVN+] Audio Capture: Resume failed via video event -', err);
+            // If resume via autoplay fails, listen for user gestures
             addGestureListeners();
-          })
+          });
         }
-      }
+      };
 
-      video.addEventListener('play', resumeContext)
-      video.addEventListener('playing', resumeContext)
-      video.addEventListener('timeupdate', resumeContext, { once: true })
+      video.addEventListener('play', resumeContext);
+      video.addEventListener('playing', resumeContext);
+      video.addEventListener('timeupdate', resumeContext, { once: true });
     }
 
-    isCapturing = true
-    console.log('[VtuberVN+] Audio Capture: Attached to video element', video)
-    return true
+    isCapturing = true;
+    console.log('[VtuberVN+] Audio Capture: Attached to video element', video);
+    return true;
   } catch (err) {
-    console.warn('[VtuberVN+] Audio Capture: Setup failed -', err)
-    // KHÔNG gọi cleanup() ở đây — chỉ reset isCapturing
-    isCapturing = false
-    return false
+    console.warn('[VtuberVN+] Audio Capture: Setup failed -', err);
+    // DO NOT invoke cleanup() here — reset isCapturing flag only
+    isCapturing = false;
+    return false;
   }
 }
 
 /**
- * Vòng lặp gửi frequency data lên parent window.
- * Adaptive FPS dựa trên trạng thái hoạt động của tab:
- * - Luôn sử dụng setTimeout thay vì requestAnimationFrame vì iframe ẩn (được set bằng visibility: hidden)
- *   có thể bị trình duyệt tạm dừng/chặn rAF hoàn toàn.
- * - Chạy ở ACTIVE_FPS (60 FPS) khi tab đang hiển thị, hoặc BACKGROUND_FPS (5 FPS) khi tab ẩn xuống nền.
- * Mỗi message kèm sessionId để main app filter đúng nguồn.
+ * Dispatch frequency data loop to parent window.
+ * Adaptive FPS based on tab visibility state:
+ * - Always use setTimeout instead of requestAnimationFrame because hidden iframes
+ *   (set to visibility: hidden) may have rAF throttled or paused by the browser.
+ * - Runs at ACTIVE_FPS (60 FPS) when tab is visible, or BACKGROUND_FPS (5 FPS) when tab is hidden.
+ * Each message includes sessionId for client-side stream routing.
  */
 function sendAudioData() {
   if (captureLoopTimer !== null) {
@@ -172,17 +173,17 @@ function sendAudioData() {
   }
 
   const visible = getIsVisible();
-  const currentFps = visible ? ACTIVE_FPS : BACKGROUND_FPS;
+  const currentFps = visible ? activeFps : BACKGROUND_FPS;
   const frameInterval = 1000 / currentFps;
 
-  // Luôn dùng setTimeout để tránh bị trình duyệt tạm dừng rAF do iframe ẩn
+  // Always use setTimeout to prevent rAF pause in hidden iframes
   captureLoopTimer = setTimeout(sendAudioData, frameInterval);
 
   const timestamp = performance.now();
   if (timestamp - lastFrameTime < frameInterval - 5) return;
   lastFrameTime = timestamp;
 
-  // Liên tục kiểm tra xem video có bị YouTube thay thế (re-render DOM) không
+  // Periodically verify if video element was replaced by YouTube DOM re-render
   const currentVideo = findVideoElement();
   if (currentVideo && currentVideo !== capturedVideo) {
     console.log('[VtuberVN+] Audio Capture: Video element replaced, re-attaching...');
@@ -192,8 +193,8 @@ function sendAudioData() {
   if (!analyser || !audioContext || !currentSessionId) return;
 
   if (audioContext.state === 'suspended') {
-    // Không tự động gọi resume() định kỳ trong vòng lặp để tránh spam cảnh báo Autoplay Policy.
-    // AudioContext sẽ được resume qua sự kiện video play hoặc khi người dùng tương tác.
+    // Do not aggressively resume in loop to avoid autoplay policy console warnings.
+    // AudioContext is resumed via video play events or user gesture listeners.
     return;
   }
 
@@ -209,15 +210,15 @@ function sendAudioData() {
       bufferLength,
     }, '*');
   } catch (_) {
-    // Cross-origin — bỏ qua
+    // Cross-origin — ignore
   }
 }
 
 function startCapture(sessionId: string) {
-  // Cùng session → skip
+  // Skip if same session is already active
   if (captureLoopTimer !== null && currentSessionId === sessionId) return;
 
-  // Dừng rAF loop + heartbeat cũ (giữ nguyên AudioContext/sourceNode)
+  // Stop previous loop & heartbeat while keeping AudioContext/sourceNode intact
   if (captureLoopTimer !== null) {
     clearTimeout(captureLoopTimer);
     captureLoopTimer = null;
@@ -234,7 +235,7 @@ function startCapture(sessionId: string) {
   currentSessionId = sessionId;
   lastFrameTime = 0;
 
-  // Resume AudioContext nếu bị suspended (do đổi bài / autoplay policy)
+  // Resume AudioContext if suspended (track change / autoplay policy)
   if (audioContext && audioContext.state === 'suspended') {
     audioContext.resume().catch(() => {});
   }
@@ -246,9 +247,8 @@ function startCapture(sessionId: string) {
     return;
   }
 
-  // setupAudioCapture kiểm tra isCapturing → trả true nếu đã setup rồi (không tạo lại AudioContext)
+  // setupAudioCapture checks isCapturing -> returns true if already configured
   if (setupAudioCapture(video)) {
-    // Khởi động loop
     sendAudioData();
     startHeartbeat(sessionId);
     console.log(`[VtuberVN+] Audio Capture: ${isCapturing ? 'Restarted' : 'Started'} (session: ${sessionId})`);
@@ -314,26 +314,26 @@ function waitForVideoThenStart(sessionId: string) {
 }
 
 /**
- * Dừng vòng lặp capture và heartbeat — GIỮ NGUYÊN AudioContext/sourceNode.
- * Gọi khi user TẮT sóng nhạc, hoặc nhận STOP message.
- * Khi bật lại, AudioContext + sourceNode sẽ được REUSE, không tạo lại.
+ * Stop capture loop and heartbeat — PRESERVES AudioContext and sourceNode.
+ * Called when user toggles off visualizer, or on STOP message.
+ * When toggled back on, AudioContext + sourceNode are REUSED without recreation.
  */
 function stopCapture() {
   if (captureLoopTimer !== null) {
-    clearTimeout(captureLoopTimer)
-    captureLoopTimer = null
+    clearTimeout(captureLoopTimer);
+    captureLoopTimer = null;
   }
   if (animationFrameId !== null) {
     cancelAnimationFrame(animationFrameId);
     animationFrameId = null;
   }
   if (heartbeatTimer) {
-    clearInterval(heartbeatTimer)
-    heartbeatTimer = null
+    clearInterval(heartbeatTimer);
+    heartbeatTimer = null;
   }
-  currentSessionId = null
-  // KHÔNG reset isCapturing — AudioContext + sourceNode vẫn còn live
-  // Giúp tránh InvalidStateError khi bật lại sóng nhạc
+  currentSessionId = null;
+  // DO NOT reset isCapturing — AudioContext + sourceNode remain alive
+  // Prevents InvalidStateError on subsequent toggle
 }
 
 function cleanup() {
@@ -356,17 +356,28 @@ function cleanup() {
 }
 
 /**
- * Lắng nghe lệnh START/STOP từ main app.
- * STOP chỉ dừng loop — KHÔNG close AudioContext.
- * cleanup() (đóng AudioContext) chỉ xảy ra khi beforeunload.
+ * Listen for START/STOP commands from host application.
+ * STOP pauses loop — DOES NOT close AudioContext.
+ * cleanup() (closing AudioContext) only occurs on beforeunload.
  */
 window.addEventListener('message', (event) => {
-  if (event.data?.type === 'VTUBERVN_AUDIO_CAPTURE_START' && event.data?.sessionId) {
-    startCapture(event.data.sessionId)
-  } else if (event.data?.type === 'VTUBERVN_AUDIO_CAPTURE_STOP') {
-    stopCapture()
-    console.log('[VtuberVN+] Audio Capture: Paused (AudioContext preserved for reuse)')
-  }
-})
+  if (event.origin !== window.location.origin && event.origin !== 'https://www.youtube.com') return;
 
-window.addEventListener('beforeunload', cleanup)
+  if (event.data?.type === 'VTUBERVN_AUDIO_CAPTURE_START' && event.data?.sessionId) {
+    if (typeof event.data?.maxFps === 'number') {
+      activeFps = Math.max(10, Math.min(60, event.data.maxFps));
+    }
+    startCapture(event.data.sessionId);
+  } else if (event.data?.type === 'VTUBERVN_AUDIO_CONFIG') {
+    if (typeof event.data?.maxFps === 'number') {
+      activeFps = Math.max(10, Math.min(60, event.data.maxFps));
+      console.log(`[VtuberVN+] Audio Capture: Active FPS limit updated to ${activeFps}`);
+    }
+  } else if (event.data?.type === 'VTUBERVN_AUDIO_CAPTURE_STOP') {
+    stopCapture();
+    console.log('[VtuberVN+] Audio Capture: Paused (AudioContext preserved for reuse)');
+  }
+});
+
+window.addEventListener('beforeunload', cleanup);
+

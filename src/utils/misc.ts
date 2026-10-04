@@ -149,7 +149,7 @@ export function waitForElementId(id: string, options?: WaitForOptions) {
 }
 
 export function validOrigin(origin: string) {
-  return origin.match(/^https?:\/\/(localhost(?::|\/|$)|(\S+\.)?(holodex\.net|vtuberhub\.vn))/i);
+  return origin.match(/^https?:\/\/(localhost|127\.0\.0\.1(?::|\/|$)|(\S+\.)?(holodex\.net|vtuberhub\.vn))/i);
 }
 
 interface SearchObjectItem {

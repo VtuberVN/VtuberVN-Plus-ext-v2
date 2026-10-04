@@ -1,20 +1,14 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg width="100%" height="100%" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24" height="24" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- Hệ màu Gradient Đỏ Hồng - Cam cháy -->
+    <!-- Hệ màu Gradient 2 màu: #A855F7 (Màu chính) -> #EC4899 (Màu phụ) -->
     <linearGradient id="vgradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ff2a46" />
-      <stop offset="100%" stop-color="#ffe32b" />
+      <stop offset="0%" stop-color="#A855F7" />
+      <stop offset="100%" stop-color="#EC4899" />
     </linearGradient>
   </defs>
-
-  <!-- Nền bo góc kích thước 24x24 -->
-  <rect width="24" height="24" rx="5.5" fill="url(#vgradient)" />
-  
-  <!--  V -->
-  <path d="M 4.5 6.5 L 12 18 L 19.5 6.5" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
-  
-  <!-- Nút Play/Chữ N được phóng to theo tỷ lệ -->
-  <polygon points="7.5,6.5 16.5,6.5 12,13" fill="#FFFFFF" opacity="0.95" />
+  <!-- Chữ V: Stroke bo góc mềm mại, 100% không nền -->
+  <path d="M 4.5 6.5 L 12 18 L 19.5 6.5" fill="none" stroke="url(#vgradient)" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" />
+  <!-- Tam giác / Play Button cân đối -->
+  <polygon points="7.5,6.5 16.5,6.5 12,13" fill="url(#vgradient)" />
 </svg>

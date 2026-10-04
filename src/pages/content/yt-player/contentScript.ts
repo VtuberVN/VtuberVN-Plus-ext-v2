@@ -4,9 +4,14 @@ import { initAudioVisualizerBridge } from "./modules/audioVisualizerBridge";
 import { initApiHandlers } from "./modules/apiHandlers";
 import { initCrowdsourcing } from "./modules/crowdsourcing";
 
-console.log("[VtuberVN+ Lite] yt-player content script is loading in iframe:", window.location.href);
+if (!import.meta.env.DEV) {
+  console.log = () => {};
+  console.debug = () => {};
+}
 
-// Khởi tạo các tính năng chính của Extension sau khi đồng bộ ngôn ngữ thành công
+console.log("[VtuberVN+] yt-player content script is loading in iframe:", window.location.href);
+
+// Initialize core features after locale synchronization
 initLocale().then(() => {
   initFastHideUI();
   initAudioVisualizerBridge();

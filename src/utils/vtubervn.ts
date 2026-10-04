@@ -75,10 +75,8 @@ function matchUrl(testUrl: string, isMultiview: boolean): string | undefined {
 
 /** Retrieve canonical URL */
 async function findCanonicalUrl(url: string): Promise<string | null> {
-  console.debug("(fallback) fetch original page for canonical URL");
   const doc = await (await fetch(url)).text();
   const match = doc.match(CANONICAL_URL_REGEX);
   const canonicalUrl = match ? "https://www.youtube.com" + match[0] : null;
-  console.debug("(fallback) found canonical URL:", canonicalUrl);
   return canonicalUrl;
 }

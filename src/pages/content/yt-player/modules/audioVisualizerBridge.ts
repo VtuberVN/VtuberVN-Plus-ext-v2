@@ -1,18 +1,46 @@
-import { inject } from "@utils";
+import { inject, validOrigin } from "@utils";
 import audioCaptureInjectPath from "../audioCapture?script&module";
+import { storage } from "webextension-polyfill";
 
 export function initAudioVisualizerBridge(): void {
-  // Inject audio capture script for wave visualizer
-  // Chạy trong embed iframe page context → chờ lệnh START → capture audio → gửi FFT data
+  // Inject audio capture script for audio wave visualizer
+  // Executes in embed iframe page context -> waits for START -> captures Web Audio -> streams FFT data
   inject(audioCaptureInjectPath);
 
-  // Bridge: forward messages giữa inject script (page context) ↔ parent window (main app)
-  // audioCapture.ts chạy trong page context, gửi postMessage → content script nhận → forward lên parent
+  // Read and sync visualizer max FPS configuration from storage to page context
+  storage.local
+    .get("visualizerMaxFps")
+    .then((res) => {
+      const maxFps = typeof res.visualizerMaxFps === "number" ? res.visualizerMaxFps : 60;
+      window.postMessage({ type: "VTUBERVN_AUDIO_CONFIG", maxFps }, window.location.origin);
+    })
+    .catch(() => {});
+
+  storage.onChanged.addListener((changes, area) => {
+    if (
+      area === "local" &&
+      changes.visualizerMaxFps &&
+      typeof changes.visualizerMaxFps.newValue === "number"
+    ) {
+      window.postMessage(
+        { type: "VTUBERVN_AUDIO_CONFIG", maxFps: changes.visualizerMaxFps.newValue },
+        window.location.origin
+      );
+    }
+  });
+
+  // Bridge: forward messages between inject script (page context) <-> parent window (host app)
   window.addEventListener("message", (event) => {
     const data = event.data;
     if (!data?.type) return;
 
-    // Forward audio data + ACK + heartbeat từ inject script lên parent (main app)
+    const isTrustedOrigin =
+      event.origin === window.location.origin ||
+      event.origin === "https://www.youtube.com" ||
+      !!validOrigin(event.origin);
+    if (!isTrustedOrigin) return;
+
+    // Forward audio data, ACK, and heartbeat from inject script to parent host app
     if (
       data.type === "VTUBERVN_AUDIO_DATA" ||
       data.type === "VTUBERVN_AUDIO_CAPTURE_ACK" ||
@@ -23,14 +51,13 @@ export function initAudioVisualizerBridge(): void {
       } catch (_) {}
     }
 
-    // Forward START/STOP commands từ parent xuống inject script (page context)
-    // Main app gửi postMessage tới iframe.contentWindow → content script nhận → forward vào page context
+    // Forward START/STOP control commands from parent down to inject script in page context
     if (
       data.type === "VTUBERVN_AUDIO_CAPTURE_START" ||
       data.type === "VTUBERVN_AUDIO_CAPTURE_STOP"
     ) {
       if (event.source !== window) {
-        window.postMessage(data, "*");
+        window.postMessage(data, window.location.origin);
       }
     }
   });

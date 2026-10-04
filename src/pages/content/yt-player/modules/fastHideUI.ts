@@ -8,7 +8,7 @@ function forceHideUI() {
     player.classList.add("ytp-autohide");
   }
 
-  // Mobile/Embed layout mới (ytm / ytw)
+  // Mobile/Embed layout (ytm / ytw)
   const overlay = document.querySelector("#player-control-overlay");
   if (overlay) {
     overlay.classList.remove("fadein");
@@ -26,7 +26,7 @@ function forceHideUI() {
 function resetFastHide() {
   if (fastHideTimer) clearTimeout(fastHideTimer);
 
-  // Hiển thị lại UI
+  // Restore UI visibility
   const overlay = document.querySelector("#player-control-overlay");
   if (overlay) {
     overlay.classList.remove("fadeout");
@@ -39,20 +39,20 @@ function resetFastHide() {
   }
 
   const video = document.querySelector("video");
-  // Không tự động ẩn nếu video đang dừng
+  // Do not auto-hide if video is paused
   if (video && !video.paused) {
     fastHideTimer = setTimeout(forceHideUI, FAST_HIDE_DELAY);
   }
 }
 
 export function initFastHideUI(): void {
-  // Bắt sự kiện trên document (dùng capture để lấy event sớm nhất, không sợ Youtube nuốt event)
+  // Listen on document capturing phase to catch pointer events early
   document.addEventListener(
     "mousemove",
     (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       if (target && typeof target.closest === "function") {
-        // Nếu chuột đang nằm trong khu vực Control Bar (thanh tiến trình, nút play...) -> KHÔNG ẨN
+        // If cursor is over playback controls (progress bar, buttons) -> do not hide
         if (
           target.closest(
             ".ytp-chrome-bottom, .ytp-chrome-top, player-top-controls, player-middle-controls, player-bottom-controls, yt-progress-bar, .player-controls-bottom, .player-controls-top",
@@ -73,7 +73,7 @@ export function initFastHideUI(): void {
         }
       }
 
-      // Nếu chuột di chuyển trong khu vực video, reset lại bộ đếm 800ms
+      // If mouse moves in video viewport, reset fast-hide timer (800ms)
       resetFastHide();
     },
     { capture: true, passive: true },
@@ -85,7 +85,7 @@ export function initFastHideUI(): void {
       if (fastHideTimer) clearTimeout(fastHideTimer);
       const video = document.querySelector("video");
       if (video && !video.paused) {
-        // Rời chuột khỏi iframe -> Ẩn ngay lập tức sau 150ms
+        // Mouse leaves iframe -> hide immediately after 150ms
         fastHideTimer = setTimeout(forceHideUI, 150);
       }
     },

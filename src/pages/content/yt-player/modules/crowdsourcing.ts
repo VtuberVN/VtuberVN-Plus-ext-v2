@@ -9,14 +9,14 @@ let nextRefreshInterval: ReturnType<typeof setInterval> | null = null;
 // ─── State ─────────────────────────────────────────────────────────────────
 let hasSentVodData = false;
 let isLivePolling = false;
-let liveEndedConfirms = 0; // /next liên tiếp nói isLive=false
+let liveEndedConfirms = 0; // Consecutive /next calls reporting isLive=false
 
 interface YtExtractorData {
   apiKey?: string;
   clientVersion?: string;
 }
 
-/** Context nhận từ webs (YoutubePlayer.vue) khi player ready */
+/** Video context received from host web application (YoutubePlayer.vue) */
 interface VideoContext {
   status?: string; // 'live' | 'upcoming' | 'past_live' | 'none'
   type?: string;   // 'stream' | 'video' | 'clip' | 'shorts'
@@ -27,13 +27,14 @@ let videoContext: VideoContext = {};
 function requestYtCfgFromMain(): Promise<YtExtractorData> {
   return new Promise((resolve) => {
     const handler = (event: MessageEvent<{ type?: string; data?: YtExtractorData }>) => {
+      if (event.origin !== window.location.origin && event.origin !== "https://www.youtube.com") return;
       if (event.data?.type === "VTUBERVN_YTDATA_FROM_MAIN") {
         window.removeEventListener("message", handler as EventListener);
         resolve(event.data.data ?? {});
       }
     };
     window.addEventListener("message", handler as EventListener);
-    window.postMessage({ type: "VTUBERVN_REQUEST_YTDATA" }, "*");
+    window.postMessage({ type: "VTUBERVN_REQUEST_YTDATA" }, window.location.origin);
     setTimeout(() => {
       window.removeEventListener("message", handler as EventListener);
       resolve({});
@@ -44,8 +45,8 @@ function requestYtCfgFromMain(): Promise<YtExtractorData> {
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
 /**
- * Parse like count từ accessibilityText.
- * Hỗ trợ: "8,8 N lượt thích", "8.8K likes", "1,2 Tr lượt thích", "8,800 lượt thích", "like this video along with 5,851 other people"
+ * Parse like count from accessibilityText across English & Vietnamese locales.
+ * Supports patterns: "8,8 N lượt thích", "8.8K likes", "1,2 Tr lượt thích", "like this video along with 5,851 other people"
  */
 function parseLikeCount(jsonStr: string): number {
   const regex = /"accessibilityText"\s*:\s*"([^"]*?(?:lượt thích|thích|like)[^"]*?)"/gi;
@@ -73,11 +74,10 @@ interface NextData {
 }
 
 /**
- * Parse /next response từ JSON string (không parse toàn bộ ~500KB - 1.2MB).
- * Tìm videoViewCountRenderer section và extract data từ đó.
+ * Parse /next response from JSON string without full 500KB-1.2MB JSON deserialization.
+ * Extracts data directly from videoViewCountRenderer section.
  */
 function parseNextResponse(jsonStr: string): NextData {
-  // Tìm chính xác object thay vì string trong mảng, xử lý space
   const match = jsonStr.match(/"videoViewCountRenderer"\s*:\s*\{/);
   const vcSection = match && match.index !== undefined ? jsonStr.slice(match.index, match.index + 800) : "";
 
@@ -86,11 +86,11 @@ function parseNextResponse(jsonStr: string): NextData {
   let viewCount = 0;
 
   if (isLive) {
-    // CCV: "runs":[{"text":"4,273"},{"text":" người đang xem"}]
+    // CCV pattern: "runs":[{"text":"4,273"},{"text":" watching"}]
     const ccvMatch = /"text"\s*:\s*"([\d,. ]+)"/.exec(vcSection);
     ccv = ccvMatch ? parseInt((ccvMatch[1] ?? "").replace(/[^\d]/g, ""), 10) || 0 : 0;
   } else {
-    // VOD: simpleText hoặc runs[0].text
+    // VOD view count: simpleText or runs[0].text
     const simpleMatch = /"simpleText"\s*:\s*"([\d,. ]+)[^"]*"/i.exec(vcSection);
     if (simpleMatch) {
       viewCount = parseInt((simpleMatch[1] ?? "").replace(/[^\d]/g, ""), 10) || 0;
@@ -106,8 +106,8 @@ function parseNextResponse(jsonStr: string): NextData {
 }
 
 /**
- * Gọi /next — endpoint duy nhất cần thiết cho initial load.
- * Trả về: isLive, CCV (live), viewCount (VOD), likeCount
+ * Query InnerTube /next endpoint — comprehensive initial payload.
+ * Returns: isLive, CCV (livestream), viewCount (VOD), likeCount
  */
 async function fetchNext(apiKey: string, clientVersion: string): Promise<NextData | null> {
   try {
@@ -132,8 +132,7 @@ async function fetchNext(apiKey: string, clientVersion: string): Promise<NextDat
 }
 
 /**
- * Gọi /updated_metadata — lightweight, chỉ trả CCV cho livestream (~5KB).
- * Poll mỗi 10s trong khi stream đang live.
+ * Query /updated_metadata — lightweight (~5KB) CCV polling during active livestreams.
  */
 async function fetchLiveCcv(apiKey: string, clientVersion: string): Promise<number> {
   try {
@@ -198,12 +197,12 @@ function sendCrowdsourcingData(params: {
 // ─── Main Logic ────────────────────────────────────────────────────────────
 
 async function startApiPolling(apiKey: string, clientVersion: string): Promise<void> {
-  // Bước 1: /next — một call có đủ: isLive, CCV, viewCount, likeCount
+  // Step 1: /next — single call providing: isLive, CCV, viewCount, likeCount
   const data = await fetchNext(apiKey, clientVersion);
   if (!data) return;
 
   if (!data.isLive && !hasSentVodData) {
-    // VOD / Past stream (kể cả archived live): gửi 1 lần rồi nghỉ
+    // VOD / Past stream: send once and complete
     sendCrowdsourcingData({ viewCount: data.viewCount, likeCount: data.likeCount });
     hasSentVodData = true;
     console.log(`[VtuberVN+] VOD: viewCount=${data.viewCount}, like=${data.likeCount}`);
@@ -214,13 +213,13 @@ async function startApiPolling(apiKey: string, clientVersion: string): Promise<v
     isLivePolling = true;
     liveEndedConfirms = 0;
 
-    // Gửi CCV + like ban đầu
+    // Send initial CCV and like count
     if (data.ccv > 0 || data.likeCount > 0) {
       sendCrowdsourcingData({ ccv: data.ccv, likeCount: data.likeCount });
       console.log(`[VtuberVN+] Live initial: ccv=${data.ccv}, like=${data.likeCount}`);
     }
 
-    // Bước 2: Poll /updated_metadata mỗi 10s (nhẹ, chỉ CCV)
+    // Step 2: Poll /updated_metadata every 10s for CCV updates
     const now = new Date();
     let msToWait = (9 - (now.getSeconds() % 10)) * 1000 - now.getMilliseconds();
     if (msToWait <= 0) msToWait += 10000;
@@ -240,7 +239,7 @@ async function startApiPolling(apiKey: string, clientVersion: string): Promise<v
       crowdsourcingInterval = setInterval(() => { void runCcvTick(); }, 10000);
     }, msToWait);
 
-    // Bước 3: Refresh /next mỗi 60s → cập nhật like + xác nhận isLive
+    // Step 3: Refresh /next every 60s to sync like count and verify stream status
     nextRefreshInterval = setInterval(async () => {
       if (!isLivePolling) { clearInterval(nextRefreshInterval!); return; }
 
@@ -254,7 +253,7 @@ async function startApiPolling(apiKey: string, clientVersion: string): Promise<v
         return;
       }
 
-      // Vẫn live → reset counter, gửi CCV từ /next + like mới nhất
+      // Stream remains live: reset counter, dispatch updated CCV and likes
       liveEndedConfirms = 0;
       if (refreshed.likeCount > 0 || refreshed.ccv > 0) {
         sendCrowdsourcingData({ ccv: refreshed.ccv, likeCount: refreshed.likeCount });
@@ -273,10 +272,6 @@ async function startCrowdsourcing(): Promise<void> {
   hasSentVodData = false;
 
   console.log(`[VtuberVN+] Crowdsourcing for videoId=${videoId}, polling ytcfg...`);
-
-  // Nếu videoContext báo không phải live stream và không phải shorts
-  // thì chúng ta vẫn cần chạy để lấy views/likes cho VOD
-  // (context chỉ là hint, /next mới là nguồn truth)
 
   let retries = 0;
   const pollForYtCfg = async (): Promise<void> => {
@@ -299,9 +294,10 @@ export function initCrowdsourcing(): void {
   void startCrowdsourcing();
 
   window.addEventListener("message", (event: MessageEvent<Record<string, unknown>>) => {
+    if (!validOrigin(event.origin) && event.origin !== window.location.origin && event.origin !== "https://www.youtube.com") return;
     const evEvent = event.data?.event;
 
-    // Nhận context video từ webs (YoutubePlayer.vue on ready)
+    // Receive video context from host web app (YoutubePlayer.vue on ready)
     if (evEvent === "videoContext") {
       videoContext = {
         status: event.data.status as string | undefined,
@@ -311,7 +307,7 @@ export function initCrowdsourcing(): void {
       return;
     }
 
-    // Stream kết thúc báo từ webs (YouTube IFrame API stateChange ENDED)
+    // Stream ended notification from host web app (YouTube IFrame API stateChange ENDED)
     if (evEvent === "streamEnded") {
       console.log("[VtuberVN+] streamEnded signal from webs → stopping live polling");
       stopLivePolling();

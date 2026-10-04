@@ -5,7 +5,7 @@ const schema = {
   // key: default-value
   vtubervnButtonInYoutube: true,
   visualizerMaxFps: 60,
-  enableCrowdsourcing: true,
+  enableCrowdsourcing: false,
 };
 export type Schema = typeof schema;
 
@@ -71,6 +71,9 @@ export const translations: Record<Locale, TranslationSchema> = {
       liveNow: "Live now:",
       channels: "kênh",
       settings: "Cài đặt",
+      noLive: "Không có kênh nào đang Live",
+      loading: "Đang tải...",
+      watchMusic: "Nghe nhạc",
     }
   },
   en: {
@@ -122,6 +125,9 @@ export const translations: Record<Locale, TranslationSchema> = {
       liveNow: "Live now:",
       channels: "channels",
       settings: "Settings",
+      noLive: "No channels currently live",
+      loading: "Loading...",
+      watchMusic: "Music",
     }
   },
 };
@@ -158,16 +164,4 @@ export const Options = {
   async set<K extends keyof Schema>(key: K, value: Schema[K]): Promise<void> {
     await storage.local.set({ [key]: value });
   },
-
-  // This probably shouldn't be used as it is, because it doesn't listen for changes
-  // in *just* the options storage.
-  /**
-   * Listen for changes in the options storage
-   */
-  /* subscribe(callback: (changes: { [K in keyof Schema]?: browser.Storage.StorageChange }) => void) {
-    storage.onChanged.addListener((changes, type) => {
-      if (type !== "local") return;
-      callback(changes);
-    });
-  }, */
 } as const;

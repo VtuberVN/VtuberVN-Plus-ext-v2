@@ -6,5 +6,5 @@
   <path d="M 4.5 6.5 L 12 18 L 19.5 6.5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
   
   <!-- Nút Play/Chữ N được phóng to theo tỷ lệ -->
-  <polygon points="7.5,6.5 16.5,6.5 12,13" opacity="0.95" />
+  <polygon points="7.5,6.5 16.5,6.5 12,13" fill="currentColor" opacity="0.95" />
 </svg>
