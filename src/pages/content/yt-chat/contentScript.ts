@@ -116,25 +116,30 @@ if (!isYouTubeHost) {
       background-color: transparent !important;
     }
 
-    /* Live chat input box with glassmorphism effect */
-    yt-live-chat-message-input-renderer #container {
-      background: rgba(255, 255, 255, 0.06) !important;
-      backdrop-filter: blur(8px) !important;
-      -webkit-backdrop-filter: blur(8px) !important;
-      border: 1px solid rgba(255, 255, 255, 0.1) !important;
-      border-radius: 8px !important;
-      margin: 4px 8px !important;
-    }
+    /* Clean transparent input panel without artificial outer border around donate/reactions */
+    yt-live-chat-message-input-renderer,
+    yt-live-chat-message-input-renderer #container,
     yt-live-chat-message-input-renderer #input-panel {
       background: transparent !important;
       background-color: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
     }
-    yt-live-chat-message-input-renderer #author-name,
-    yt-live-chat-message-input-renderer #input,
-    yt-live-chat-text-input-field-renderer #input,
-    yt-live-chat-text-input-field-renderer #label,
-    #input-panel [contenteditable="true"] {
+
+    /* Text colors for input fields without tampering with native container shape */
+    html[dark] yt-live-chat-message-input-renderer #author-name,
+    html[dark] yt-live-chat-message-input-renderer #input,
+    html[dark] yt-live-chat-text-input-field-renderer #input,
+    html[dark] yt-live-chat-text-input-field-renderer #label,
+    html[dark] #input-panel [contenteditable="true"] {
       color: #f1f1f5 !important;
+    }
+    html:not([dark]) yt-live-chat-message-input-renderer #author-name,
+    html:not([dark]) yt-live-chat-message-input-renderer #input,
+    html:not([dark]) yt-live-chat-text-input-field-renderer #input,
+    html:not([dark]) yt-live-chat-text-input-field-renderer #label,
+    html:not([dark]) #input-panel [contenteditable="true"] {
+      color: #0f0f0f !important;
     }
 
     /* Disable YouTube's gradient fade mask at top/bottom of chat */
@@ -453,6 +458,7 @@ if (!isYouTubeHost) {
   // ─── OTA Dynamic Patch Fetcher ──────────────────────────────────
   const PATCH_API_URLS = [
     "https://vtuberhub.vn/api/v1/extension/livechat-theme",
+    "https://beta.vtuberhub.vn/api/v1/extension/livechat-theme",
   ];
 
   interface LiveChatPatchStorage {
