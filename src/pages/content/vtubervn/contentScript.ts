@@ -13,6 +13,7 @@ inject(injectPath).catch(e => {
 
 // Listen for locale and theme synchronization events from inject script
 window.addEventListener('message', (event) => {
+  if (event.origin !== window.location.origin) return;
   try {
     if (event.data?.type === 'VTUBERVN_LOCALE_SYNC' && event.data?.locale) {
       storage.local.set({ vtubervn_locale: event.data.locale }).catch(() => {});

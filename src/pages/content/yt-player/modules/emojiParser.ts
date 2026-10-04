@@ -1,5 +1,6 @@
 import { EmojiCategory, EmojiItem, SponsorBadgeRenderer } from "./types";
 import { setCurrentUserAvatarUrl, t } from "./context";
+import { validOrigin } from "@utils";
 
 export function extractAndSendChannelEmojis(res: any): void {
   try {
@@ -162,6 +163,7 @@ export function extractAndSendChannelEmojis(res: any): void {
       }
     }
 
+    const targetOrigin = validOrigin(document.referrer) ? new URL(document.referrer).origin : "https://vtuberhub.vn";
     window.parent.postMessage(
       {
         type: "VTUBERVN_CHANNEL_EMOJIS",
@@ -171,7 +173,7 @@ export function extractAndSendChannelEmojis(res: any): void {
         membershipBadge,
         membershipDuration,
       },
-      "*",
+      targetOrigin,
     );
   } catch (err) {
     console.error(t("errorFetchingComments"), err);

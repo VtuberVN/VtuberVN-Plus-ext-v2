@@ -10,6 +10,7 @@ if (darkThemeParam === "1" || darkThemeParam === null) {
 
 // Listen for relay from content script to synchronize dark theme attribute on MAIN world
 window.addEventListener("message", (event) => {
+  if (event.origin !== window.location.origin) return;
   if (event.data?.type === "VTUBERVN_THEME_SYNC" && event.data?.payload) {
     if (typeof event.data.payload.isDark === 'boolean') {
       if (event.data.payload.isDark) {

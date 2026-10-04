@@ -203,12 +203,12 @@ function sendAudioData() {
   analyser.getByteFrequencyData(dataArray);
 
   try {
-    window.parent.postMessage({
+    window.postMessage({
       type: 'VTUBERVN_AUDIO_DATA',
       sessionId: currentSessionId,
       frequencyData: Array.from(dataArray),
       bufferLength,
-    }, '*');
+    }, window.location.origin);
   } catch (_) {
     // Cross-origin — ignore
   }
@@ -254,11 +254,11 @@ function startCapture(sessionId: string) {
     console.log(`[VtuberVN+] Audio Capture: ${isCapturing ? 'Restarted' : 'Started'} (session: ${sessionId})`);
 
     try {
-      window.parent.postMessage({
+      window.postMessage({
         type: 'VTUBERVN_AUDIO_CAPTURE_ACK',
         sessionId,
         status: 'started',
-      }, '*');
+      }, window.location.origin);
     } catch (_) {}
   }
 }
@@ -272,10 +272,10 @@ function startHeartbeat(sessionId: string) {
       return;
     }
     try {
-      window.parent.postMessage({
+      window.postMessage({
         type: 'VTUBERVN_AUDIO_CAPTURE_HEARTBEAT',
         sessionId,
-      }, '*');
+      }, window.location.origin);
     } catch (_) {}
   }, HEARTBEAT_INTERVAL);
 }
@@ -291,11 +291,11 @@ function waitForVideoThenStart(sessionId: string) {
             sendAudioData();
             console.log(`[VtuberVN+] Audio Capture: Started (delayed, session: ${sessionId})`);
             try {
-              window.parent.postMessage({
+              window.postMessage({
                 type: 'VTUBERVN_AUDIO_CAPTURE_ACK',
                 sessionId,
                 status: 'started',
-              }, '*');
+              }, window.location.origin);
             } catch (_) {}
           }
         }

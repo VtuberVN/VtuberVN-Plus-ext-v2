@@ -181,6 +181,7 @@ function sendCrowdsourcingData(params: {
   ccv?: number;
   likeCount?: number;
 }): void {
+  const targetOrigin = validOrigin(document.referrer) ? new URL(document.referrer).origin : "https://vtuberhub.vn";
   window.parent.postMessage(
     {
       type: "VTUBERVN_CROWDSOURCING_DATA",
@@ -190,7 +191,7 @@ function sendCrowdsourcingData(params: {
       likeCount: params.likeCount ?? 0,
       likeStatus: "INDIFFERENT",
     },
-    "*"
+    targetOrigin
   );
 }
 

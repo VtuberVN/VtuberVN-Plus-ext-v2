@@ -26,6 +26,12 @@ if (import.meta.env.DEV) {
 // ─── Audio Visualizer Bridge ──────────────────────────────────────
 // Relay audio data from YouTube embed iframes to main page context.
 window.addEventListener('message', (event) => {
+  const isTrustedOrigin =
+    event.origin === window.location.origin ||
+    event.origin === 'https://www.youtube.com' ||
+    event.origin === 'https://www.youtube-nocookie.com';
+  if (!isTrustedOrigin) return;
+
   const data = event.data;
   if (!data?.type) return;
 
@@ -43,7 +49,7 @@ function detectAndSyncLocale() {
   const storedLocale = localStorage.getItem('i18n_redirected');
   const locale = htmlLang || storedLocale || navigator.language.split('-')[0] || 'vi';
   const normalized = locale.startsWith('vi') ? 'vi' : 'en';
-  window.postMessage({ type: 'VTUBERVN_LOCALE_SYNC', locale: normalized }, '*');
+  window.postMessage({ type: 'VTUBERVN_LOCALE_SYNC', locale: normalized }, window.location.origin);
 }
 
 detectAndSyncLocale();
@@ -79,7 +85,7 @@ function detectAndSyncTheme() {
         isDark,
         primaryRgb,
       }
-    }, '*');
+    }, window.location.origin);
   } catch {
     // silent fail
   }
@@ -97,7 +103,7 @@ themeObserver.observe(document.documentElement, {
 
 window.addEventListener('storage', (e) => {
   if (e.key === 'vtubervn_locale' && e.newValue) {
-    window.postMessage({ type: 'VTUBERVN_LOCALE_SYNC', locale: e.newValue }, '*');
+    window.postMessage({ type: 'VTUBERVN_LOCALE_SYNC', locale: e.newValue }, window.location.origin);
   }
   if (e.key && (e.key.includes('theme') || e.key.includes('settings') || e.key.includes('color-mode'))) {
     detectAndSyncTheme();

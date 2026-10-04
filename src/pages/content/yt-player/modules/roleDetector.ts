@@ -1,4 +1,5 @@
 import { getCurrentUserAvatarUrl, getAvatarId, t } from "./context";
+import { validOrigin } from "@utils";
 
 export function detectAndSendUserRole(res: any): void {
   let isOwner = false;
@@ -81,9 +82,10 @@ export function detectAndSendUserRole(res: any): void {
 
     // Dispatch detected user roles to host web app
     if (isOwner || isMod) {
+      const targetOrigin = validOrigin(document.referrer) ? new URL(document.referrer).origin : "https://vtuberhub.vn";
       window.parent.postMessage(
         { type: "VTUBERVN_USER_ROLE", isOwner, isMod },
-        "*",
+        targetOrigin,
       );
     }
   } catch (err) {

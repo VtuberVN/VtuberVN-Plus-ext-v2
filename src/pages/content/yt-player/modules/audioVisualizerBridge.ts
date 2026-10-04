@@ -47,7 +47,8 @@ export function initAudioVisualizerBridge(): void {
       data.type === "VTUBERVN_AUDIO_CAPTURE_HEARTBEAT"
     ) {
       try {
-        window.parent.postMessage(data, "*");
+        const targetOrigin = validOrigin(document.referrer) ? new URL(document.referrer).origin : "https://vtuberhub.vn";
+        window.parent.postMessage(data, targetOrigin);
       } catch (_) {}
     }
 

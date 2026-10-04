@@ -148,8 +148,20 @@ export function waitForElementId(id: string, options?: WaitForOptions) {
   );
 }
 
-export function validOrigin(origin: string) {
-  return origin.match(/^https?:\/\/(localhost|127\.0\.0\.1(?::|\/|$)|(\S+\.)?(holodex\.net|vtuberhub\.vn))/i);
+export function validOrigin(origin: string): boolean {
+  if (!origin || typeof origin !== "string") return false;
+  try {
+    const u = new URL(origin);
+    if (u.protocol === "https:" && (u.hostname === "vtuberhub.vn" || u.hostname.endsWith(".vtuberhub.vn") || u.hostname === "holodex.net" || u.hostname.endsWith(".holodex.net"))) {
+      return true;
+    }
+    if ((u.protocol === "http:" || u.protocol === "https:") && (u.hostname === "localhost" || u.hostname === "127.0.0.1")) {
+      return true;
+    }
+  } catch {
+    // ignore
+  }
+  return false;
 }
 
 interface SearchObjectItem {

@@ -1,5 +1,5 @@
 import { YtLikeData } from "./types";
-import { sha1, translations, Locale } from "@utils";
+import { sha1, translations, Locale, validOrigin } from "@utils";
 import { storage } from "webextension-polyfill";
 
 export const videoId = window.location.pathname.split("/").slice(-1)[0];
@@ -81,6 +81,7 @@ function tryExtractFromDom(): Partial<YtLikeData> {
 /** Dispatch regex/DOM fallback failure telemetry to the parent host frame */
 function notifyRegexFailure(failedFields: string[]): void {
   try {
+    const targetOrigin = validOrigin(document.referrer) ? new URL(document.referrer).origin : "https://vtuberhub.vn";
     window.parent.postMessage(
       {
         type: "VTUBERVN_REGEX_FAILURE",
@@ -88,7 +89,7 @@ function notifyRegexFailure(failedFields: string[]): void {
         failedFields,
         timestamp: Date.now(),
       },
-      "*",
+      targetOrigin,
     );
   } catch {
     // silent fail

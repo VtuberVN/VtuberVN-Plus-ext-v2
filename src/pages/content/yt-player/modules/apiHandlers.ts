@@ -3,16 +3,24 @@ import { videoId, getYtLikeData, fetchYoutubeApi, like, t } from "./context";
 import { detectAndSendUserRole } from "./roleDetector";
 import { extractAndSendChannelEmojis } from "./emojiParser";
 
+let currentHostOrigin = "https://vtuberhub.vn";
+
+function postToParent(payload: unknown, targetOrigin?: string): void {
+  try {
+    const origin = targetOrigin || currentHostOrigin || (validOrigin(document.referrer) ? new URL(document.referrer).origin : "https://vtuberhub.vn");
+    window.parent.postMessage(payload, origin);
+  } catch {
+    // silent fail
+  }
+}
+
 /** Dispatch session expired signal to host web app */
 function sendSessionExpiredAlert(): void {
   try {
-    window.parent.postMessage(
-      {
-        type: "VTUBERVN_SESSION_EXPIRED",
-        timestamp: Date.now(),
-      },
-      "*",
-    );
+    postToParent({
+      type: "VTUBERVN_SESSION_EXPIRED",
+      timestamp: Date.now(),
+    });
   } catch {
     // silent fail
   }
@@ -53,19 +61,21 @@ async function safeFetchYoutubeApi(
 export function initApiHandlers(): void {
   window.addEventListener("message", async (event) => {
     if (validOrigin(event.origin)) {
+      currentHostOrigin = event.origin;
+
       if (event.data?.event === "checkLikeStatus") {
         try {
           const ytLikeData = await getYtLikeData();
           if (ytLikeData) {
             console.log(`[VtuberVN+] checkLikeStatus -> Status: ${ytLikeData.likeStatus || 'INDIFFERENT'}, Subscribed: ${!!ytLikeData.isSubscribed}`);
-            window.parent.postMessage(
+            postToParent(
               {
                 type: "VTUBERVN_LIKE_STATUS",
                 status: ytLikeData.likeStatus || "INDIFFERENT",
                 resumeTime: ytLikeData.resumeTime || 0,
                 isSubscribed: !!ytLikeData.isSubscribed,
               },
-              "*",
+              event.origin,
             );
           }
         } catch (e) {
@@ -103,9 +113,9 @@ export function initApiHandlers(): void {
 
             console.log(`[VtuberVN+] checkSubscribeStatus -> Channel: ${channelId}, Subscribed: ${isSubscribed}, State: ${notificationState}`);
             
-            window.parent.postMessage(
+            postToParent(
               { type: "VTUBERVN_SUBSCRIBE_STATUS", channelId, isSubscribed, notificationState },
-              "*",
+              event.origin,
             );
           }
         } catch (e) {
@@ -155,9 +165,9 @@ export function initApiHandlers(): void {
             );
             detectAndSendUserRole(res);
             extractAndSendChannelEmojis(res);
-            window.parent.postMessage(
+            postToParent(
               { type: "VTUBERVN_COMMENTS_DATA", data: res },
-              "*",
+              event.origin,
             );
           }
         } catch (e) {
@@ -176,9 +186,9 @@ export function initApiHandlers(): void {
               { continuation },
               ytLikeData,
             );
-            window.parent.postMessage(
+            postToParent(
               { type: "VTUBERVN_REPLIES_DATA", commentKey, data: res },
-              "*",
+              event.origin,
             );
           }
         } catch (e) {
@@ -197,9 +207,9 @@ export function initApiHandlers(): void {
               { commentText, createCommentParams },
               ytLikeData,
             );
-            window.parent.postMessage(
+            postToParent(
               { type: "VTUBERVN_COMMENT_POSTED", data: res },
-              "*",
+              event.origin,
             );
           }
         } catch (e) {
@@ -219,7 +229,7 @@ export function initApiHandlers(): void {
               ytLikeData,
             );
             const success = res && !res.error ? true : false;
-            window.parent.postMessage(
+            postToParent(
               {
                 type: "VTUBERVN_ADMIN_ACTION_RESULT",
                 action: "edit",
@@ -227,7 +237,7 @@ export function initApiHandlers(): void {
                 targetId: commentKey,
                 newText: commentText,
               },
-              "*",
+              event.origin,
             );
           }
         } catch (e) {
@@ -246,9 +256,9 @@ export function initApiHandlers(): void {
               { actions: [actionParam] },
               ytLikeData,
             );
-            window.parent.postMessage(
+            postToParent(
               { type: "VTUBERVN_COMMENT_ACTION_DONE", data: res },
-              "*",
+              event.origin,
             );
           }
         } catch (e) {
@@ -268,14 +278,14 @@ export function initApiHandlers(): void {
               ytLikeData,
             );
             const success = res && res.actionResults ? true : false;
-            window.parent.postMessage(
+            postToParent(
               {
                 type: "VTUBERVN_ADMIN_ACTION_RESULT",
                 action: "heart",
                 success,
                 targetId: commentKey,
               },
-              "*",
+              event.origin,
             );
           }
         } catch (e) {
@@ -295,14 +305,14 @@ export function initApiHandlers(): void {
               ytLikeData,
             );
             const success = res && !res.error ? true : false;
-            window.parent.postMessage(
+            postToParent(
               {
                 type: "VTUBERVN_ADMIN_ACTION_RESULT",
                 action: "delete",
                 success,
                 targetId: commentKey,
               },
-              "*",
+              event.origin,
             );
           }
         } catch (e) {
@@ -322,14 +332,14 @@ export function initApiHandlers(): void {
               ytLikeData,
             );
             const success = res && !res.error ? true : false;
-            window.parent.postMessage(
+            postToParent(
               {
                 type: "VTUBERVN_ADMIN_ACTION_RESULT",
                 action: "flag",
                 success,
                 targetId: commentKey,
               },
-              "*",
+              event.origin,
             );
           }
         } catch (e) {
@@ -349,14 +359,14 @@ export function initApiHandlers(): void {
               ytLikeData,
             );
             const success = res && !res.error ? true : false;
-            window.parent.postMessage(
+            postToParent(
               {
                 type: "VTUBERVN_ADMIN_ACTION_RESULT",
                 action: "block",
                 success,
                 targetId: commentKey,
               },
-              "*",
+              event.origin,
             );
           }
         } catch (e) {
@@ -376,14 +386,14 @@ export function initApiHandlers(): void {
               ytLikeData,
             );
             const success = res && !res.error ? true : false;
-            window.parent.postMessage(
+            postToParent(
               {
                 type: "VTUBERVN_ADMIN_ACTION_RESULT",
                 action: "pin",
                 success,
                 targetId: commentKey,
               },
-              "*",
+              event.origin,
             );
           }
         } catch (e) {
@@ -403,14 +413,14 @@ export function initApiHandlers(): void {
               ytLikeData,
             );
             const success = res && !res.error ? true : false;
-            window.parent.postMessage(
+            postToParent(
               {
                 type: "VTUBERVN_ADMIN_ACTION_RESULT",
                 action: "unpin",
                 success,
                 targetId: commentKey,
               },
-              "*",
+              event.origin,
             );
           }
         } catch (e) {
@@ -431,13 +441,13 @@ export function initApiHandlers(): void {
             );
 
             const success = res && !res.error ? true : false;
-            window.parent.postMessage(
+            postToParent(
               {
                 type: "VTUBERVN_ADMIN_ACTION_RESULT",
                 action: "deleteChat",
                 success,
               },
-              "*",
+              event.origin,
             );
           }
         } catch (e) {
@@ -458,13 +468,13 @@ export function initApiHandlers(): void {
             );
 
             const success = res && !res.error ? true : false;
-            window.parent.postMessage(
+            postToParent(
               {
                 type: "VTUBERVN_ADMIN_ACTION_RESULT",
                 action: "timeoutChat",
                 success,
               },
-              "*",
+              event.origin,
             );
           }
         } catch (e) {
@@ -485,13 +495,13 @@ export function initApiHandlers(): void {
             );
 
             const success = res && !res.error ? true : false;
-            window.parent.postMessage(
+            postToParent(
               {
                 type: "VTUBERVN_ADMIN_ACTION_RESULT",
                 action: "banChat",
                 success,
               },
-              "*",
+              event.origin,
             );
           }
         } catch (e) {
@@ -510,9 +520,9 @@ export function initApiHandlers(): void {
               { commentText, createReplyParams },
               ytLikeData,
             );
-            window.parent.postMessage(
+            postToParent(
               { type: "VTUBERVN_COMMENT_REPLY_POSTED", data: res },
-              "*",
+              event.origin,
             );
           }
         } catch (e) {
@@ -531,9 +541,9 @@ export function initApiHandlers(): void {
               { channelIds: [channelId] },
               ytLikeData,
             );
-            window.parent.postMessage(
+            postToParent(
               { type: "VTUBERVN_SUBSCRIBE_POSTED", data: res },
-              "*",
+              event.origin,
             );
           }
         } catch (e) {
@@ -552,9 +562,9 @@ export function initApiHandlers(): void {
               { channelIds: [channelId] },
               ytLikeData,
             );
-            window.parent.postMessage(
+            postToParent(
               { type: "VTUBERVN_UNSUBSCRIBE_POSTED", data: res },
-              "*",
+              event.origin,
             );
           }
         } catch (e) {
@@ -584,9 +594,9 @@ export function initApiHandlers(): void {
                 }
               }
             }
-            window.parent.postMessage(
+            postToParent(
               { type: "VTUBERVN_HISTORY_SYNC_DATA", videoIds },
-              "*",
+              event.origin,
             );
           }
         } catch (e) {

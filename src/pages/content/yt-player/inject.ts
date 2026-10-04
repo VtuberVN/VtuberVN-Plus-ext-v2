@@ -45,7 +45,7 @@
             playerResponse,
           },
         },
-        "*",
+        window.location.origin,
       );
     } catch (e) {
       window.postMessage(
@@ -53,7 +53,7 @@
           type: "VTUBERVN_EXTRACTED_YTCFG",
           data: {},
         },
-        "*",
+        window.location.origin,
       );
     }
   }

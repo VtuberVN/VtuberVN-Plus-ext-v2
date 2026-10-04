@@ -453,14 +453,21 @@ if (!isYouTubeHost) {
   // ─── OTA Dynamic Patch Fetcher ──────────────────────────────────
   const PATCH_API_URLS = [
     "https://vtuberhub.vn/api/v1/extension/livechat-theme",
-    "http://localhost:3000/api/v1/extension/livechat-theme",
-    "http://localhost:8080/api/v1/extension/livechat-theme",
   ];
 
   interface LiveChatPatchStorage {
     version: string;
     css: string;
     fetchedAt: number;
+  }
+
+  function isValidPatch(data: unknown): data is { css: { base: string }; patchVersion: string } {
+    if (!data || typeof data !== "object") return false;
+    const d = data as { css?: { base?: string }; patchVersion?: string };
+    if (typeof d.patchVersion !== "string" || !/^[0-9a-zA-Z._-]{1,32}$/.test(d.patchVersion)) return false;
+    if (!d.css || typeof d.css.base !== "string") return false;
+    if (d.css.base.length === 0 || d.css.base.length > 200 * 1024) return false;
+    return true;
   }
 
   async function fetchLiveChatPatch(force = false) {
@@ -478,7 +485,7 @@ if (!isYouTubeHost) {
         if (!res.ok) continue;
         const data = await res.json();
 
-        if (data?.css?.base && data?.patchVersion) {
+        if (isValidPatch(data)) {
           const newPatch: LiveChatPatchStorage = {
             version: data.patchVersion,
             css: data.css.base,
@@ -636,7 +643,8 @@ if (!isYouTubeHost) {
     if (isClose) {
       console.log("[VtuberVN+] Header close button clicked, notifying parent window to close chat");
       try {
-        window.parent.postMessage({ type: "VTUBERVN_CLOSE_CHAT" }, "*");
+        const targetOrigin = validOrigin(document.referrer) ? new URL(document.referrer).origin : "https://vtuberhub.vn";
+        window.parent.postMessage({ type: "VTUBERVN_CLOSE_CHAT" }, targetOrigin);
       } catch {
         // Ignore cross-origin error
       }
