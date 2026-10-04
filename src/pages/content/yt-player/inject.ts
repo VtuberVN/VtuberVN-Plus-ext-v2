@@ -61,6 +61,7 @@
   sendYtcfg();
 
   window.addEventListener("message", (event: MessageEvent) => {
+    if (event.origin !== window.location.origin && event.origin !== "https://www.youtube.com") return;
     if (event.data?.type === "VTUBERVN_REQUEST_YTCFG") {
       sendYtcfg();
     }
