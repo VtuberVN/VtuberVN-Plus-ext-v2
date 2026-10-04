@@ -21,13 +21,13 @@ Tiện ích mở rộng chính thức cho nền tảng [VtuberVN](https://vtuber
 1. Mở trang quản lý tiện ích: `chrome://extensions/` (hoặc `edge://extensions/`).
 2. Bật công tắc **Developer mode (Chế độ cho nhà phát triển)** ở góc trên bên phải.
 3. Cài đặt theo 1 trong 2 cách:
-   - **File .CRX**: Kéo thả file `vtubervn-plus-v2-v2.0.2.crx` vào trình duyệt và chọn *Add extension*.
-   - **File .ZIP**: Giải nén file `vtubervn-plus-v2-v2.0.2-chrome.zip`, nhấn **Load unpacked (Tải tiện ích đã giải nén)** và chọn thư mục vừa giải nén.
+   - **File .CRX**: Kéo thả file `vtubervn-star-v2-v2.0.2.crx` vào trình duyệt và chọn *Add extension*.
+   - **File .ZIP**: Giải nén file `vtubervn-star-v2-v2.0.2-chrome.zip`, nhấn **Load unpacked (Tải tiện ích đã giải nén)** và chọn thư mục vừa giải nén.
 
 ### 2. Mozilla Firefox
 1. Mở trang `about:addons`.
 2. Nhấn vào biểu tượng bánh răng ⚙️ ở góc phải &rarr; chọn **Install Add-on From File...**.
-3. Chọn file `vtubervn-plus-v2-v2.0.2.xpi`.
+3. Chọn file `vtubervn-star-v2-v2.0.2.xpi`.
 
 ---
 

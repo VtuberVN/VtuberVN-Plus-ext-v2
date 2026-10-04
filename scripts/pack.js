@@ -10,7 +10,7 @@ const rootDir = path.resolve(__dirname, '..');
 const pkg = JSON.parse(fs.readFileSync(path.join(rootDir, 'package.json'), 'utf8'));
 const version = pkg.version || '1.0.0';
 const isV2 = rootDir.includes('-v2') || version.startsWith('2.');
-const prefix = isV2 ? 'vtubervn-plus-v2' : 'vtubervn-plus-v1';
+const prefix = isV2 ? 'vtubervn-star-v2' : 'vtubervn-star-v1';
 
 const distChrome = path.join(rootDir, 'dist_chrome');
 const distFirefox = path.join(rootDir, 'dist_firefox');

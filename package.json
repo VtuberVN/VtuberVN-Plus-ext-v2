@@ -5,7 +5,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/VtuberVN/VtuberVN_Star.git"
+    "url": "https://github.com/VtuberVN/VtuberVN-Star-v2.git"
   },
   "scripts": {
     "build": "yarn build:chrome && yarn build:firefox",
